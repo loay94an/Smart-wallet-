@@ -1,0 +1,11 @@
+{
+  "TEST1234": {
+    "syncKey": "TEST1234",
+    "data": {
+      "test": true
+    },
+    "updatedAt": "2026-10-09T02:35:37.588Z",
+    "deviceName": "TestBot",
+    "version": 1
+  }
+}

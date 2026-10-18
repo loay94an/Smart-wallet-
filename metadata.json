@@ -1,0 +1,6 @@
+{
+  "name": "المحفظة المالية الذكية",
+  "description": "تطبيق محفظة مالية متكامل بتخزين IndexedDB محلي، مزامنة سحابية، ومشاركة التقارير والنسخ الاحتياطية عبر واتساب وتلجرام والبريد الإلكتروني.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
