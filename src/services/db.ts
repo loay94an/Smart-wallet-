@@ -45,6 +45,7 @@ export const INITIAL_STATE: AppState = {
   people: [],
   debts: [],
   payments: [],
+  works: [],
   workLogs: [],
   workPayments: [],
   workGoals: [],
@@ -192,18 +193,14 @@ class IndexedDBStorage {
     } catch (e) {}
 
     if (this.isIndexedDBSupported) {
-      try {
-        const db = await this.openDB();
-        await new Promise<void>((resolve, reject) => {
-          const transaction = db.transaction(STATE_STORE, 'readwrite');
-          const store = transaction.objectStore(STATE_STORE);
-          const req = store.clear();
-          req.onsuccess = () => resolve();
-          req.onerror = () => reject(req.error);
-        });
-      } catch (err) {
-        console.error('Error clearing IndexedDB:', err);
-      }
+      const db = await this.openDB();
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(STATE_STORE, 'readwrite');
+        transaction.objectStore(STATE_STORE).clear();
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error || new Error('IndexedDB clear failed'));
+        transaction.onabort = () => reject(transaction.error || new Error('IndexedDB clear aborted'));
+      });
     }
   }
 
@@ -232,12 +229,10 @@ class IndexedDBStorage {
 
   // Ensure state structure is always complete and valid using universal parser
   public sanitizeState(raw: any): AppState {
-    if (!raw) return INITIAL_STATE;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('بيانات المحفظة غير صالحة');
     const parsed = parseAndInspectBackup(raw);
-    if (parsed.success && parsed.inspection) {
-      return parsed.inspection.state;
-    }
-    return INITIAL_STATE;
+    if (parsed.success && parsed.inspection) return parsed.inspection.state;
+    throw new Error(parsed.error || 'تعذر التحقق من بنية بيانات المحفظة');
   }
 }
 
