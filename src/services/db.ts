@@ -188,24 +188,23 @@ class IndexedDBStorage {
 
   // Clear all data
   async clearAll(): Promise<void> {
-    try {
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
-      localStorage.removeItem('currentWorkId');
-      localStorage.removeItem('timer_state');
-      localStorage.removeItem('wallet_theme');
-      localStorage.removeItem('wallet_lang');
-    } catch (e) {}
-
-    if (this.isIndexedDBSupported) {
-      const db = await this.openDB();
-      await new Promise<void>((resolve, reject) => {
-        const transaction = db.transaction(STATE_STORE, 'readwrite');
-        transaction.objectStore(STATE_STORE).clear();
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error || new Error('IndexedDB clear failed'));
-        transaction.onabort = () => reject(transaction.error || new Error('IndexedDB clear aborted'));
-      });
-    }
+    const clear = async () => {
+      if (this.isIndexedDBSupported) {
+        const db = await this.openDB();
+        await new Promise<void>((resolve, reject) => {
+          const transaction = db.transaction(STATE_STORE, 'readwrite');
+          transaction.objectStore(STATE_STORE).clear();
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error || new Error('IndexedDB clear failed'));
+          transaction.onabort = () => reject(transaction.error || new Error('IndexedDB clear aborted'));
+        });
+      }
+      for (const key of [LEGACY_STORAGE_KEY, 'currentWorkId', 'timer_state', 'wallet_theme', 'wallet_lang']) {
+        try { localStorage.removeItem(key); } catch (error) { console.warn('Could not clear local storage key:', key, error); }
+      }
+    };
+    this.saveQueue = this.saveQueue.then(clear, clear);
+    return this.saveQueue;
   }
 
   // Get storage usage estimate
