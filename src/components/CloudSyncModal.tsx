@@ -23,6 +23,7 @@ interface CloudSyncModalProps {
   state: AppState;
   onApplyCloudState: (cloudState: AppState) => void;
   onUpdateSyncKey: (newKey: string) => void;
+  onUpdateSyncServerUrl: (url: string) => void;
   language: 'ar' | 'en';
 }
 
@@ -32,6 +33,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   state,
   onApplyCloudState,
   onUpdateSyncKey,
+  onUpdateSyncServerUrl,
   language,
 }) => {
   const isRTL = language === 'ar';
@@ -58,13 +60,13 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   useEffect(() => {
     if (isOpen && state.settings.syncKey) {
       setSyncKeyInput(state.settings.syncKey);
-      checkCloudStatus(state.settings.syncKey);
+      checkCloudStatus(state.settings.syncKey, state.settings.syncServerUrl);
     }
-  }, [isOpen, state.settings.syncKey]);
+  }, [isOpen, state.settings.syncKey, state.settings.syncServerUrl]);
 
-  const checkCloudStatus = async (key: string) => {
+  const checkCloudStatus = async (key: string, serverUrl = state.settings.syncServerUrl) => {
     if (!key.trim()) return;
-    const res = await cloudSyncService.checkCloudStatus(key);
+    const res = await cloudSyncService.checkCloudStatus(key, serverUrl);
     setCloudInfo(res);
   };
 
@@ -82,7 +84,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
       text: isRTL ? 'تم إنشاء رمز مزامنة جديد!' : 'New sync key generated!',
       type: 'info',
     });
-    checkCloudStatus(newKey);
+    checkCloudStatus(newKey, state.settings.syncServerUrl);
   };
 
   const handlePush = async () => {
@@ -94,7 +96,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     setIsPushing(true);
     setStatusMessage(null);
 
-    const res: CloudSyncResult = await cloudSyncService.pushToCloud(syncKeyInput, state);
+    const res: CloudSyncResult = await cloudSyncService.pushToCloud(syncKeyInput, state, undefined, state.settings.syncServerUrl);
     setIsPushing(false);
 
     if (res.success) {
@@ -105,7 +107,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           : `✅ Cloud push successful! (Version #${res.version})`,
         type: 'success',
       });
-      checkCloudStatus(syncKeyInput);
+      checkCloudStatus(syncKeyInput, state.settings.syncServerUrl);
     } else {
       setStatusMessage({
         text: res.message || (isRTL ? 'فشل الرفع إلى السحابة' : 'Push failed'),
@@ -118,7 +120,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
     setIsPulling(true);
     setStatusMessage(null);
 
-    const res: CloudSyncResult = await cloudSyncService.pullFromCloud(syncKeyInput);
+    const res: CloudSyncResult = await cloudSyncService.pullFromCloud(syncKeyInput, state.settings.syncServerUrl);
     setIsPulling(false);
 
     if (res.success && res.data) {
@@ -177,6 +179,24 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           <button type="button" onClick={onClose} className="text-purple-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        {/* Cloud API endpoint */}
+        <div className="space-y-2 rounded-2xl border border-purple-900/40 bg-[#181838] p-4">
+          <label className="block text-xs font-bold text-purple-200">
+            {isRTL ? 'عنوان خادم المزامنة (HTTPS)' : 'Sync server URL (HTTPS)'}
+          </label>
+          <input
+            type="url"
+            dir="ltr"
+            value={state.settings.syncServerUrl || ''}
+            onChange={(e) => onUpdateSyncServerUrl(e.target.value.trim())}
+            placeholder="https://your-api.example.com"
+            className="w-full rounded-xl border border-purple-900/60 bg-[#101026] p-3 text-xs text-white outline-none focus:border-cyan-400"
+          />
+          <p className="text-[10px] leading-5 text-purple-300/60">
+            {isRTL ? 'مطلوب في نسخة Android. يجب نشر خادم server.ts على استضافة HTTPS وإدخال رابطه هنا. اتركه فارغاً لاستخدام نفس نطاق الموقع في نسخة الويب.' : 'Required on Android. Deploy server.ts to an HTTPS host and enter its URL. Leave blank to use the website origin on web.'}
+          </p>
         </div>
 
         {/* Sync Key Input & Controls */}
