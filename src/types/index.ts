@@ -150,6 +150,8 @@ export interface SecurityConfig {
   enabled: boolean;
   type: 'off' | 'pin' | 'pattern';
   pin: string;
+  pinSalt?: string;
+  pinHash?: string;
   pattern: number[];
 }
 
