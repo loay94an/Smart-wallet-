@@ -25,13 +25,24 @@ function hashSyncKey(key: string): string {
 try {
   if (fs.existsSync(BACKUP_FILE)) {
     const parsed = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf-8'));
+    const legacyPlaintext: Record<string, unknown> = {};
     Object.entries(parsed).forEach(([storedKey, value]) => {
       const legacy = value as any;
-      // Migrate old files whose object keys were the raw sync key.
+      if (legacy?.data?.format !== 'smart-wallet-encrypted') {
+        // Keep a restricted local migration copy; never expose or re-serve plaintext records.
+        legacyPlaintext[storedKey] = legacy;
+        return;
+      }
       const keyHash = /^[a-f0-9]{64}$/i.test(storedKey) ? storedKey : hashSyncKey(String(legacy.syncKey || storedKey));
       const { syncKey: _discardedSecret, ...record } = legacy;
       syncStore.set(keyHash, record as SyncRecord);
     });
+    if (Object.keys(legacyPlaintext).length > 0) {
+      const legacyPath = BACKUP_FILE + '.legacy.json';
+      if (!fs.existsSync(legacyPath)) {
+        fs.writeFileSync(legacyPath, JSON.stringify(legacyPlaintext), { encoding: 'utf-8', mode: 0o600 });
+      }
+    }
   }
 } catch (error) {
   console.warn('Could not read existing sync store file:', error);
