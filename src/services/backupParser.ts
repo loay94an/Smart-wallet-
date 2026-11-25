@@ -411,6 +411,9 @@ export function parseAndInspectBackup(input: string | object): {
       enabled: Boolean(rawSecurity.enabled),
       type: (rawSecurity.type === 'pin' ? 'pin' : 'off') as 'off' | 'pin' | 'pattern',
       pin: rawSecurity.pin ? String(rawSecurity.pin) : '',
+      pinSalt: rawSecurity.pinSalt ? String(rawSecurity.pinSalt) : '',
+      pinHash: rawSecurity.pinHash ? String(rawSecurity.pinHash) : '',
+      pinLength: Number(rawSecurity.pinLength) || (rawSecurity.pin ? String(rawSecurity.pin).length : 4),
       pattern: Array.isArray(rawSecurity.pattern) ? rawSecurity.pattern : [],
     };
 
