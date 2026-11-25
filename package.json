@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
-    "android:debug": "npm run build && cap sync android && cd android && ./gradlew assembleDebug"
+    "android:debug": "npm run build && cap sync android && cd android && ./gradlew assembleDebug",
+    "android:init": "cap add android"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -31,7 +32,9 @@
     "vite": "^8.3.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "@capacitor/core": "^8.6.2",
-    "@capacitor/android": "^8.6.2"
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/status-bar": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
