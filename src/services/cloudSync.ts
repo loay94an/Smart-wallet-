@@ -69,9 +69,9 @@ async function decryptState(syncKey: string, envelope: EncryptedEnvelope): Promi
   }
   const key = await deriveKey(syncKey, fromBase64(envelope.salt), envelope.iterations);
   const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: fromBase64(envelope.iv) },
+    { name: 'AES-GCM', iv: fromBase64(envelope.iv) as BufferSource },
     key,
-    fromBase64(envelope.ciphertext)
+    fromBase64(envelope.ciphertext) as BufferSource
   );
   const parsed = JSON.parse(new TextDecoder().decode(plaintext));
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('بيانات المزامنة غير صالحة');
