@@ -162,6 +162,7 @@ export interface SettingsConfig {
   theme: string;
   autoCloudSync: boolean;
   syncKey: string;
+  syncServerUrl?: string;
   userEmail: string;
 }
 
