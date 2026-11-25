@@ -92,7 +92,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleSaveSettings = async () => {
-    onUpdateSettings({
+    try {
+      onUpdateSettings({
       theme: activeTheme,
       currency: currency.trim() || 'ر.س',
       userEmail: userEmail.trim() || 'loay94an@gmail.com',
@@ -124,7 +125,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       });
     }
 
-    onClose();
+      onClose();
+    } catch (error: any) {
+      showStatus(isRTL ? 'تعذر حفظ إعدادات الحماية: ' + (error?.message || 'خطأ غير معروف') : 'Could not save security settings', true);
+    }
   };
 
   const handleExportBackup = () => {
