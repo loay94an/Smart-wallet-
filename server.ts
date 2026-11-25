@@ -63,7 +63,7 @@ function persistStore(): void {
 
 function readSyncKey(req: Request, res: Response): string | null {
   const key = req.body?.syncKey;
-  if (typeof key !== 'string' || key.trim().length < 40 || key.trim().length > 256) {
+  if (typeof key !== 'string' || !/^SW-[A-F0-9]{64}$/.test(key.trim())) {
     res.status(400).json({ error: 'رمز المزامنة غير صالح. استخدم رمزاً عشوائياً بطول 40 حرفاً على الأقل.' });
     return null;
   }
