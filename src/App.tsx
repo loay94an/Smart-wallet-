@@ -90,7 +90,7 @@ export default function App() {
   // Sync to IndexedDB whenever state changes
   useEffect(() => {
     if (isLoaded) {
-      dbService.saveState(state);
+      dbService.saveState(state).catch((err) => console.error('تعذر حفظ بيانات المحفظة:', err));
     }
   }, [state, isLoaded]);
 
