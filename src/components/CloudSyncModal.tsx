@@ -203,7 +203,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                 setSyncKeyInput(e.target.value.toUpperCase());
                 checkCloudStatus(e.target.value.toUpperCase());
               }}
-              placeholder="WALLET-XXXX-2026"
+              placeholder="SW-... (رمز عشوائي آمن)"
               className="flex-1 rounded-xl border border-purple-900/60 bg-[#101026] p-2.5 font-mono text-xs font-black tracking-wider text-cyan-300 uppercase outline-none focus:border-cyan-400"
             />
             <button
