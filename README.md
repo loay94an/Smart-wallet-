@@ -52,7 +52,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 ### تنزيل APK من GitHub Actions
 
-يعمل سير البناء `Build Smart Wallet Android APK` عند فتح طلب دمج للتغييرات أو بعد دمجها في `main`. بعد نجاح البناء، افتح صفحة Actions للمستودع، واختر تشغيل Android، ثم نزّل artifact باسم `smart-wallet-android-debug`.
+يعمل سير البناء `Smart Wallet quality checks` عند فتح طلب دمج للتغييرات أو بعد دمجها في `main`. بعد نجاح البناء، افتح صفحة Actions للمستودع، واختر تشغيل Android، ثم نزّل artifact باسم `smart-wallet-android-debug`.
 
 ## المزامنة السحابية على Android
 
