@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppState } from '../types';
 import { cloudSyncService, CloudSyncResult } from '../services/cloudSync';
+import { createSecureSyncKey } from '../services/db';
 import { ConfirmModal } from './ConfirmModal';
 import {
   Cloud,
@@ -74,7 +75,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   };
 
   const handleGenerateNewKey = () => {
-    const newKey = 'WALLET-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + new Date().getFullYear();
+    const newKey = createSecureSyncKey();
     setSyncKeyInput(newKey);
     onUpdateSyncKey(newKey);
     setStatusMessage({
