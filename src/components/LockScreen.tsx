@@ -17,7 +17,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
   const [errorMsg, setErrorMsg] = useState<string>('');
   const isRTL = language === 'ar';
 
-  const requiredLength = security.pinHash ? 4 : (security.pin ? security.pin.length : 4);
+  const requiredLength = security.pinHash ? (security.pinLength || 4) : (security.pin ? security.pin.length : 4);
 
   const handlePinDigit = async (digit: string) => {
     if (pinInput.length >= 6) return;
