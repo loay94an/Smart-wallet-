@@ -100,7 +100,7 @@ export class CloudSyncService {
   async pullFromCloud(syncKey: string): Promise<CloudSyncResult> {
     try {
       const key = syncKey.trim();
-      if (key.length < 40) return { success: false, message: 'رمز المزامنة قديم أو ضعيف. أنشئ رمزاً جديداً قبل المزامنة.' };
+      if (!/^SW-[A-F0-9]{64}$/.test(key)) return { success: false, message: 'رمز المزامنة غير صالح أو قديم. أنشئ رمزاً جديداً قبل المزامنة.' };
       const response = await fetch('/api/sync/pull', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
