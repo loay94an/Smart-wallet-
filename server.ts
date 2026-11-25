@@ -24,6 +24,7 @@ function hashSyncKey(key: string): string {
 
 try {
   if (fs.existsSync(BACKUP_FILE)) {
+    fs.chmodSync(BACKUP_FILE, 0o600);
     const parsed = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf-8'));
     const legacyPlaintext: Record<string, unknown> = {};
     Object.entries(parsed).forEach(([storedKey, value]) => {
@@ -64,7 +65,7 @@ function persistStore(): void {
 function readSyncKey(req: Request, res: Response): string | null {
   const key = req.body?.syncKey;
   if (typeof key !== 'string' || !/^SW-[A-F0-9]{64}$/.test(key.trim())) {
-    res.status(400).json({ error: 'رمز المزامنة غير صالح. استخدم رمزاً عشوائياً بطول 40 حرفاً على الأقل.' });
+    res.status(400).json({ error: 'رمز المزامنة غير صالح. استخدم الرمز الآمن الذي يبدأ بـ SW-.' });
     return null;
   }
   return key.trim();
@@ -106,7 +107,7 @@ async function startServer() {
     if (!key) return;
     const { data, deviceName } = req.body || {};
     if (!data || data.format !== 'smart-wallet-encrypted' || data.version !== 1 ||
-        typeof data.salt !== 'string' || typeof data.iv !== 'string' || typeof data.ciphertext !== 'string') {
+        typeof data.salt !== 'string' || typeof data.iv !== 'string' || typeof data.ciphertext !== 'string' || !data.ciphertext.length) {
       return res.status(400).json({ error: 'يرفض الخادم البيانات غير المشفرة. حدّث التطبيق وأنشئ نسخة مشفرة.' });
     }
 
@@ -124,7 +125,8 @@ async function startServer() {
     try {
       persistStore();
     } catch {
-      syncStore.delete(storageKey);
+      if (existing) syncStore.set(storageKey, existing);
+      else syncStore.delete(storageKey);
       return res.status(500).json({ error: 'تعذر حفظ النسخة المشفرة على الخادم' });
     }
 
