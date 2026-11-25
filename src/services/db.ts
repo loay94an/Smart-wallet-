@@ -109,6 +109,7 @@ class IndexedDBStorage {
 
   // Load app state from IndexedDB (with fallback and migration from localStorage)
   async loadState(): Promise<AppState> {
+    let storedDataDetected = false;
     try {
       if (this.isIndexedDBSupported) {
         const db = await this.openDB();
@@ -126,7 +127,7 @@ class IndexedDBStorage {
         });
 
         if (stateFromIDB) {
-          // Verify required arrays exist
+          storedDataDetected = true;
           return this.sanitizeState(stateFromIDB);
         }
       }
@@ -138,6 +139,7 @@ class IndexedDBStorage {
     try {
       const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
       if (legacyRaw) {
+        storedDataDetected = true;
         const parsed = JSON.parse(legacyRaw);
         const migrated = this.sanitizeState({ ...INITIAL_STATE, ...parsed });
         // Save to IndexedDB
@@ -146,8 +148,10 @@ class IndexedDBStorage {
       }
     } catch (e) {
       console.warn('Error reading legacy localStorage:', e);
+      if (storedDataDetected) throw new Error('تعذر قراءة بيانات محفوظة سابقة. أوقفنا إعادة التهيئة التلقائية لحماية بياناتك.');
     }
 
+    if (storedDataDetected) throw new Error('تعذر التحقق من بيانات المحفظة المحفوظة. لم يتم استبدالها ببيانات فارغة.');
     // Default state if nothing found
     const defaultState = this.sanitizeState(INITIAL_STATE);
     await this.saveState(defaultState);
