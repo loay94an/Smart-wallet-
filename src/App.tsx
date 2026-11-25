@@ -22,7 +22,7 @@ import {
   StandardNote,
   MindMap,
 } from './types';
-import { dbService, INITIAL_STATE } from './services/db';
+import { dbService, INITIAL_STATE, createSecureSyncKey } from './services/db';
 import { cloudSyncService } from './services/cloudSync';
 import { Navbar } from './components/Navbar';
 import { BottomNav, NavTab } from './components/BottomNav';
@@ -59,6 +59,13 @@ export default function App() {
     async function initApp() {
       try {
         let loaded = await dbService.loadState();
+        // Replace short legacy sync tokens; do not auto-upload to an old insecure cloud key.
+        if ((loaded.settings?.syncKey || '').length < 40) {
+          loaded = {
+            ...loaded,
+            settings: { ...loaded.settings, syncKey: createSecureSyncKey(), autoCloudSync: false },
+          };
+        }
         // One-time migration: replace legacy plaintext PIN with a salted PBKDF2 hash.
         if (loaded.security?.pin && !loaded.security.pinHash) {
           const credential = await createPinCredential(loaded.security.pin).catch(() => null);
