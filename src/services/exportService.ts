@@ -2,6 +2,12 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { AppState } from '../types';
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char] as string));
+}
 import { formatCurrency } from './i18n';
 
 /**
@@ -361,8 +367,8 @@ export const exportService = {
             .map(
               (s) => `
             <div style="flex: 1; background: #1a1a3a; border: 1px solid #3b3b6d; border-radius: 12px; padding: 14px; text-align: center;">
-              <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 4px;">${s.label}</div>
-              <div style="font-size: 16px; font-weight: 800; color: #38bdf8;">${s.value}</div>
+              <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 4px;">${escapeHtml(s.label)}</div>
+              <div style="font-size: 16px; font-weight: 800; color: #38bdf8;">${escapeHtml(s.value)}</div>
             </div>
           `
             )
@@ -390,9 +396,9 @@ export const exportService = {
                   (item, i) => `
                 <tr style="border-bottom: 1px solid #1e1e40; color: #e2e8f0;">
                   <td style="padding: 9px 14px; color: #818cf8;">${i + 1}</td>
-                  <td style="padding: 9px 14px; font-weight: 700;">${item.title}</td>
-                  <td style="padding: 9px 14px; color: #94a3b8; font-size: 11px;">${item.subtitle || item.extra || '-'}</td>
-                  <td style="padding: 9px 14px; text-align: ${isRTL ? 'left' : 'right'}; font-weight: 800; color: #34d399;">${item.amount || '-'}</td>
+                  <td style="padding: 9px 14px; font-weight: 700;">${escapeHtml(item.title)}</td>
+                  <td style="padding: 9px 14px; color: #94a3b8; font-size: 11px;">${escapeHtml(item.subtitle || item.extra || '-')}</td>
+                  <td style="padding: 9px 14px; text-align: ${isRTL ? 'left' : 'right'}; font-weight: 800; color: #34d399;">${escapeHtml(item.amount || '-')}</td>
                 </tr>
               `
                 )
@@ -408,11 +414,11 @@ export const exportService = {
     container.innerHTML = `
       <div style="border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <h1 style="font-size: 22px; font-weight: 900; margin: 0; color: #c084fc;">${title}</h1>
+          <h1 style="font-size: 22px; font-weight: 900; margin: 0; color: #c084fc;">${escapeHtml(title)}</h1>
           <p style="font-size: 12px; color: #a5b4fc; margin: 4px 0 0 0;">${isRTL ? 'المحفظة المالية الذكية • تقرير رسمي موثق' : 'Smart Financial Wallet • Official Report'}</p>
         </div>
         <div style="text-align: ${isRTL ? 'left' : 'right'}; font-size: 11px; color: #94a3b8;">
-          <div>${dateStr}</div>
+          <div>${escapeHtml(dateStr)}</div>
           <div style="color: #10b981; font-weight: 700; margin-top: 2px;">IndexedDB Verified</div>
         </div>
       </div>
