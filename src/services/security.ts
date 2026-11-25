@@ -22,10 +22,10 @@ async function derivePinHash(pin: string, salt: Uint8Array): Promise<string> {
   return encode(new Uint8Array(bits));
 }
 
-export async function createPinCredential(pin: string): Promise<{ pin: string; pinSalt: string; pinHash: string }> {
+export async function createPinCredential(pin: string): Promise<{ pin: string; pinSalt: string; pinHash: string; pinLength: number }> {
   if (!/^\\d{4,6}$/.test(pin)) throw new Error('يجب أن يتكون PIN من 4 إلى 6 أرقام');
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  return { pin: '', pinSalt: encode(salt), pinHash: await derivePinHash(pin, salt) };
+  return { pin: '', pinSalt: encode(salt), pinHash: await derivePinHash(pin, salt), pinLength: pin.length };
 }
 
 export async function verifyPinCredential(pin: string, security: { pin?: string; pinSalt?: string; pinHash?: string }): Promise<boolean> {
