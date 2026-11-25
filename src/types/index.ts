@@ -152,6 +152,7 @@ export interface SecurityConfig {
   pin: string;
   pinSalt?: string;
   pinHash?: string;
+  pinLength?: number;
   pattern: number[];
 }
 
