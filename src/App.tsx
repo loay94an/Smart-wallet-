@@ -40,6 +40,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { BackupModal } from './components/BackupModal';
 import { exportService } from './services/exportService';
 import { formatCurrency } from './services/i18n';
+import { createPinCredential } from './services/security';
 
 export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
@@ -57,7 +58,15 @@ export default function App() {
   useEffect(() => {
     async function initApp() {
       try {
-        const loaded = await dbService.loadState();
+        let loaded = await dbService.loadState();
+        // One-time migration: replace legacy plaintext PIN with a salted PBKDF2 hash.
+        if (loaded.security?.pin && !loaded.security.pinHash) {
+          const credential = await createPinCredential(loaded.security.pin).catch(() => null);
+          if (credential) {
+            loaded = { ...loaded, security: { ...loaded.security, ...credential } };
+            await dbService.saveState(loaded);
+          }
+        }
         setState(loaded);
         if (loaded.security && loaded.security.enabled && loaded.security.type !== 'off') {
           setIsLocked(true);
