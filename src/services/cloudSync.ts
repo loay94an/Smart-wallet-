@@ -2,7 +2,7 @@ import { AppState } from '../types';
 import { Capacitor } from '@capacitor/core';
 
 function apiUrl(path: string, serverUrl?: string): string {
-  const configured = (serverUrl || import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\\/+$/, '');
+  const configured = (serverUrl || import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
   if (!configured) {
     if (Capacitor.isNativePlatform()) throw new Error('Android يحتاج رابط خادم المزامنة HTTPS. أدخل عنوان الخادم في نافذة المزامنة.');
     return path;
@@ -12,7 +12,7 @@ function apiUrl(path: string, serverUrl?: string): string {
   if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(parsed.hostname))) {
     throw new Error('يجب أن يستخدم خادم المزامنة HTTPS');
   }
-  return configured + path;
+  return parsed.origin + parsed.pathname.replace(/\/+$/, '') + path;
 }
 
 export interface CloudSyncResult {
