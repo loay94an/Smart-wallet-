@@ -82,7 +82,7 @@ export class CloudSyncService {
   async pushToCloud(syncKey: string, data: AppState, deviceName?: string): Promise<CloudSyncResult> {
     try {
       const key = syncKey.trim();
-      if (key.length < 40) return { success: false, message: 'رمز المزامنة قديم أو ضعيف. أنشئ رمزاً جديداً قبل المزامنة.' };
+      if (!/^SW-[A-F0-9]{64}$/.test(key)) return { success: false, message: 'رمز المزامنة غير صالح أو قديم. أنشئ رمزاً جديداً قبل المزامنة.' };
       const encryptedData = await encryptState(key, data);
       const response = await fetch('/api/sync/push', {
         method: 'POST',
