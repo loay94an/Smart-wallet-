@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppState, SecurityConfig } from '../types';
 import { dbService } from '../services/db';
+import { createPinCredential } from '../services/security';
 import { sharingService } from '../services/sharing';
 import { parseAndInspectBackup } from '../services/backupParser';
 import {
@@ -90,26 +91,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setTimeout(() => setStatusMsg(null), 3500);
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     onUpdateSettings({
       theme: activeTheme,
       currency: currency.trim() || 'ر.س',
       userEmail: userEmail.trim() || 'loay94an@gmail.com',
     });
 
-    onUpdateSecurity({
-      enabled: securityType !== 'off',
-      type: securityType,
-      pin: securityType === 'pin' ? newPin : '',
-      pattern: securityType === 'pattern' ? state.security.pattern : [],
-    });
+    if (securityType === 'pin') {
+      if (newPin) {
+        const credential = await createPinCredential(newPin);
+        onUpdateSecurity({
+          enabled: true,
+          type: 'pin',
+          ...credential,
+          pattern: [],
+        });
+      } else if (state.security.pinHash) {
+        onUpdateSecurity({ ...state.security, enabled: true, type: 'pin', pin: '' });
+      } else {
+        showStatus(isRTL ? 'يرجى إدخال رمز PIN من 4 إلى 6 أرقام' : 'Enter a 4-6 digit PIN', true);
+        return;
+      }
+    } else {
+      onUpdateSecurity({
+        enabled: securityType === 'pattern',
+        type: securityType,
+        pin: '',
+        pinSalt: '',
+        pinHash: '',
+        pattern: securityType === 'pattern' ? state.security.pattern : [],
+      });
+    }
 
     onClose();
   };
 
   const handleExportBackup = () => {
     try {
-      sharingService.downloadJSONBackup(state);
+      sharingService.downloadJSONBackup({
+        ...state,
+        settings: { ...state.settings, syncKey: '', autoCloudSync: false },
+        security: { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pattern: [] },
+      });
       showStatus(isRTL ? '✅ تم تحميل ملف النسخة الاحتياطية بنجاح' : '✅ Backup downloaded successfully');
     } catch (e: any) {
       showStatus(isRTL ? 'فشل التصدير: ' + e.message : 'Export failed: ' + e.message, true);
