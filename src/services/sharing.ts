@@ -59,7 +59,7 @@ export class SharingService {
 💼 *الأعمال:* ${state.works.length} أعمال مسجلة
 📝 *المعاملات:* ${state.transactions.length} معاملة
 
-🔒 رمز المزامنة السحابية: ${state.settings.syncKey}
+
 ✨ تم التصدير عبر تطبيق المحفظة المالية الذكية`;
   }
 
@@ -150,7 +150,7 @@ ${jsonString}`;
   // Create a File object for native sharing
   createBackupFile(state: AppState): File {
     const dateStr = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(createPortableBackup(state), null, 2)], { type: 'application/json' });
     return new File([blob], `wallet-backup-${dateStr}.json`, { type: 'application/json' });
   }
 }
