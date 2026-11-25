@@ -1,4 +1,19 @@
 import { AppState } from '../types';
+import { Capacitor } from '@capacitor/core';
+
+function apiUrl(path: string, serverUrl?: string): string {
+  const configured = (serverUrl || import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\\/+$/, '');
+  if (!configured) {
+    if (Capacitor.isNativePlatform()) throw new Error('Android يحتاج رابط خادم المزامنة HTTPS. أدخل عنوان الخادم في نافذة المزامنة.');
+    return path;
+  }
+  let parsed: URL;
+  try { parsed = new URL(configured); } catch { throw new Error('رابط خادم المزامنة غير صالح'); }
+  if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(parsed.hostname))) {
+    throw new Error('يجب أن يستخدم خادم المزامنة HTTPS');
+  }
+  return configured + path;
+}
 
 export interface CloudSyncResult {
   success: boolean;
@@ -79,12 +94,12 @@ async function decryptState(syncKey: string, envelope: EncryptedEnvelope): Promi
 }
 
 export class CloudSyncService {
-  async pushToCloud(syncKey: string, data: AppState, deviceName?: string): Promise<CloudSyncResult> {
+  async pushToCloud(syncKey: string, data: AppState, deviceName?: string, serverUrl?: string): Promise<CloudSyncResult> {
     try {
       const key = syncKey.trim();
       if (!/^SW-[A-F0-9]{64}$/.test(key)) return { success: false, message: 'رمز المزامنة غير صالح أو قديم. أنشئ رمزاً جديداً قبل المزامنة.' };
       const encryptedData = await encryptState(key, data);
-      const response = await fetch('/api/sync/push', {
+      const response = await fetch(apiUrl('/api/sync/push', serverUrl), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ syncKey: key, data: encryptedData, deviceName: deviceName || this.getDeviceName() }),
@@ -97,11 +112,11 @@ export class CloudSyncService {
     }
   }
 
-  async pullFromCloud(syncKey: string): Promise<CloudSyncResult> {
+  async pullFromCloud(syncKey: string, serverUrl?: string): Promise<CloudSyncResult> {
     try {
       const key = syncKey.trim();
       if (!/^SW-[A-F0-9]{64}$/.test(key)) return { success: false, message: 'رمز المزامنة غير صالح أو قديم. أنشئ رمزاً جديداً قبل المزامنة.' };
-      const response = await fetch('/api/sync/pull', {
+      const response = await fetch(apiUrl('/api/sync/pull', serverUrl), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ syncKey: key }),
@@ -118,9 +133,9 @@ export class CloudSyncService {
     }
   }
 
-  async checkCloudStatus(syncKey: string): Promise<{ exists: boolean; updatedAt?: string; version?: number; deviceName?: string }> {
+  async checkCloudStatus(syncKey: string, serverUrl?: string): Promise<{ exists: boolean; updatedAt?: string; version?: number; deviceName?: string }> {
     try {
-      const response = await fetch('/api/sync/status', {
+      const response = await fetch(apiUrl('/api/sync/status', serverUrl), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ syncKey: syncKey.trim() }),
