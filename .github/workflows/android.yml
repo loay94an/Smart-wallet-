@@ -9,6 +9,7 @@ on:
       - 'package.json'
       - 'capacitor.config.ts'
       - 'vite.config.ts'
+      - 'server.ts'
       - '.github/workflows/android.yml'
   pull_request:
     branches: [main]
