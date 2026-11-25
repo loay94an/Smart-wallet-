@@ -61,6 +61,7 @@ export const INITIAL_STATE: AppState = {
     theme: 'purple',
     autoCloudSync: false,
     syncKey: createSecureSyncKey(),
+    syncServerUrl: '',
     userEmail: 'loay94an@gmail.com',
   },
   security: {
