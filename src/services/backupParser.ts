@@ -159,6 +159,38 @@ export function parseAndInspectBackup(input: string | object): {
     const isArrayFormat = Array.isArray(root);
     if (isArrayFormat) {
       sourceFormat = 'Transactions List (Array)';
+    } else {
+      if (!root || typeof root !== 'object') return { success: false, error: 'بنية النسخة الاحتياطية غير صالحة.' };
+      const arrayAliases = [
+        ['transactions', 'txs', 'operations', 'records', 'المعاملات', 'العمليات', 'حركات_الحساب', 'entries', 'items'],
+        ['categories', 'cats', 'الأقسام', 'التصنيفات', 'الفئات'],
+        ['people', 'persons', 'clients', 'الأشخاص', 'العملاء', 'جهات_الاتصال'],
+        ['debts', 'loans', 'الديون', 'السلف', 'المستحقات'],
+        ['payments', 'debtPayments', 'الدفعات', 'السداد'],
+        ['works', 'projects', 'الأعمال', 'المشاريع'],
+        ['workLogs', 'logs', 'سجلات_العمل'],
+        ['workPayments', 'دفعات_العمل'],
+        ['workGoals'], ['budgets', 'الميزانية', 'الميزانيات'],
+        ['financialGoals', 'goals', 'الأهداف'], ['notebooks'], ['standardNotes'], ['mindMaps'],
+      ];
+      let recognized = false;
+      for (const aliases of arrayAliases) {
+        for (const key of aliases) {
+          if (Object.prototype.hasOwnProperty.call(root, key)) {
+            recognized = true;
+            if (!Array.isArray(root[key])) return { success: false, error: `الحقل "${key}" يجب أن يكون قائمة.` };
+          }
+        }
+      }
+      if (root.settings !== undefined && (!root.settings || typeof root.settings !== 'object' || Array.isArray(root.settings))) {
+        return { success: false, error: 'إعدادات النسخة الاحتياطية غير صالحة.' };
+      }
+      if (root.security !== undefined && (!root.security || typeof root.security !== 'object' || Array.isArray(root.security))) {
+        return { success: false, error: 'بيانات الحماية في النسخة الاحتياطية غير صالحة.' };
+      }
+      if (!recognized && !root.settings && !root.security && !root.exchangeRates) {
+        return { success: false, error: 'لم يتم العثور على أقسام محفظة معروفة في الملف.' };
+      }
     }
 
     // Extract categories
@@ -411,6 +443,9 @@ export function parseAndInspectBackup(input: string | object): {
       enabled: Boolean(rawSecurity.enabled),
       type: (rawSecurity.type === 'pin' ? 'pin' : 'off') as 'off' | 'pin' | 'pattern',
       pin: rawSecurity.pin ? String(rawSecurity.pin) : '',
+      pinSalt: rawSecurity.pinSalt ? String(rawSecurity.pinSalt) : '',
+      pinHash: rawSecurity.pinHash ? String(rawSecurity.pinHash) : '',
+      pinLength: Number(rawSecurity.pinLength) || (rawSecurity.pin ? String(rawSecurity.pin).length : 4),
       pattern: Array.isArray(rawSecurity.pattern) ? rawSecurity.pattern : [],
     };
 
@@ -469,7 +504,12 @@ export function parseAndInspectBackup(input: string | object): {
   }
 }
 
-// Merge imported state into current state without duplicates
+// Merge imported state into current state without duplicates.
+function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
+  const ids = new Set(current.map((item) => item.id));
+  return [...current, ...incoming.filter((item) => !ids.has(item.id))];
+}
+
 export function mergeAppState(current: AppState, incoming: AppState): AppState {
   // Merge categories by name
   const categoryNames = new Set(current.categories.map((c) => c.name.trim()));
@@ -569,13 +609,17 @@ export function mergeAppState(current: AppState, incoming: AppState): AppState {
     categories: mergedCategories,
     people: mergedPeople,
     debts: mergedDebts,
-    payments: [...current.payments, ...incoming.payments],
+    payments: mergeById(current.payments, incoming.payments),
     works: mergedWorks,
-    workLogs: mergedWorkLogs,
-    workPayments: mergedWorkPayments,
-    workGoals: [...current.workGoals, ...incoming.workGoals],
+    workLogs: mergeById(current.workLogs, incoming.workLogs),
+    workPayments: mergeById(current.workPayments, incoming.workPayments),
+    workGoals: mergeById(current.workGoals, incoming.workGoals),
     budgets: mergedBudgets,
     financialGoals: mergedGoals,
+    notebooks: mergeById(current.notebooks, incoming.notebooks),
+    standardNotes: mergeById(current.standardNotes, incoming.standardNotes),
+    mindMaps: mergeById(current.mindMaps, incoming.mindMaps),
+    exchangeRates: { ...current.exchangeRates, ...incoming.exchangeRates },
     lastUpdated: new Date().toISOString(),
   };
 }

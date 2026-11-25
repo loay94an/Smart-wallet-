@@ -69,13 +69,19 @@ export const BackupModal: React.FC<BackupModalProps> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const jsonString = JSON.stringify(state, null, 2);
+  // Never include the local PIN/pattern or cloud bearer key in a portable backup.
+  const safeBackupState: AppState = {
+    ...state,
+    settings: { ...state.settings, syncKey: '', autoCloudSync: false },
+    security: { enabled: false, type: 'off', pin: '', pattern: [] },
+  };
+  const jsonString = JSON.stringify(safeBackupState, null, 2);
   const summaryText = sharingService.formatSummaryMessage(state);
 
   // --- Export Actions ---
   const handleDownloadFile = () => {
     try {
-      sharingService.downloadJSONBackup(state);
+      sharingService.downloadJSONBackup(safeBackupState);
       showToast(isRTL ? '✅ تم تنزيل ملف النسخة الاحتياطية بنجاح' : '✅ Backup file downloaded');
     } catch (e: any) {
       showToast(isRTL ? 'حدث خطأ أثناء التنزيل: ' + e.message : 'Download failed');

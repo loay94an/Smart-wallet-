@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SecurityConfig } from '../types';
+import { verifyPinCredential } from '../services/security';
 import { Lock, Delete, KeyRound, Grid, ShieldAlert } from 'lucide-react';
 
 interface LockScreenProps {
@@ -16,16 +17,16 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
   const [errorMsg, setErrorMsg] = useState<string>('');
   const isRTL = language === 'ar';
 
-  const requiredLength = security.pin ? security.pin.length : 4;
+  const requiredLength = security.pinHash ? (security.pinLength || 4) : (security.pin ? security.pin.length : 4);
 
-  const handlePinDigit = (digit: string) => {
+  const handlePinDigit = async (digit: string) => {
     if (pinInput.length >= 6) return;
     const next = pinInput + digit;
     setPinInput(next);
     setErrorMsg('');
 
     if (next.length === requiredLength) {
-      if (next === security.pin) {
+      if (await verifyPinCredential(next, security)) {
         onUnlock();
       } else {
         setErrorMsg(isRTL ? 'رمز PIN غير صحيح!' : 'Incorrect PIN!');
