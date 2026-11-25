@@ -45,6 +45,8 @@ import { createPinCredential } from './services/security';
 export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [hasLoadedState, setHasLoadedState] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
@@ -75,11 +77,13 @@ export default function App() {
           }
         }
         setState(loaded);
+        setHasLoadedState(true);
         if (loaded.security && loaded.security.enabled && loaded.security.type !== 'off') {
           setIsLocked(true);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load state from IndexedDB:', err);
+        setLoadError(err?.message || 'تعذر قراءة بيانات المحفظة المحفوظة');
       } finally {
         setIsLoaded(true);
       }
@@ -89,10 +93,10 @@ export default function App() {
 
   // Sync to IndexedDB whenever state changes
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && hasLoadedState) {
       dbService.saveState(state).catch((err) => console.error('تعذر حفظ بيانات المحفظة:', err));
     }
-  }, [state, isLoaded]);
+  }, [state, isLoaded, hasLoadedState]);
 
   // Apply theme and direction
   useEffect(() => {
@@ -491,6 +495,19 @@ export default function App() {
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-500 border-t-transparent" />
           <span className="text-sm font-bold">جاري تشغيل قاعدة البيانات IndexedDB...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a] p-6 text-center text-white" dir="rtl">
+        <div className="max-w-lg rounded-2xl border border-red-500/40 bg-[#171736] p-6">
+          <h1 className="text-lg font-black text-red-300">تعذر فتح بيانات المحفظة</h1>
+          <p className="mt-3 text-sm leading-7 text-purple-100">{loadError}</p>
+          <p className="mt-3 text-xs leading-6 text-purple-300">لم يتم حفظ بيانات فارغة فوق البيانات السابقة. لا تمسح بيانات المتصفح. احتفظ بملف قاعدة البيانات وجرّب استعادة نسخة احتياطية بعد معالجة سبب الخطأ.</p>
+          <button type="button" onClick={() => window.location.reload()} className="mt-5 rounded-xl bg-purple-600 px-5 py-2 text-sm font-bold">إعادة المحاولة</button>
         </div>
       </div>
     );
