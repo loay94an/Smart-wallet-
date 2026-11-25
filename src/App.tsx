@@ -122,7 +122,7 @@ export default function App() {
   useEffect(() => {
     if (isLoaded && state.settings?.autoCloudSync && state.settings.syncKey) {
       const timer = setTimeout(() => {
-        cloudSyncService.pushToCloud(state.settings.syncKey, state);
+        cloudSyncService.pushToCloud(state.settings.syncKey, state, undefined, state.settings.syncServerUrl);
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -653,6 +653,7 @@ export default function App() {
         state={state}
         onApplyCloudState={handleApplyCloudState}
         onUpdateSyncKey={(newKey) => handleUpdateSettings({ syncKey: newKey })}
+        onUpdateSyncServerUrl={(url) => handleUpdateSettings({ syncServerUrl: url })}
         language={lang}
       />
 
