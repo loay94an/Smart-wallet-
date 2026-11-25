@@ -23,33 +23,17 @@ export const DEFAULT_RATES: Record<string, number> = {
   DZD: 135.0,
 };
 
+export function createSecureSyncKey(): string {
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('يتطلب توليد رمز مزامنة آمن متصفحاً يدعم Web Crypto');
+  }
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  return 'SW-' + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
 export const INITIAL_STATE: AppState = {
-  transactions: [
-    {
-      id: 'tx_init_1',
-      date: new Date(Date.now() - 86400000 * 2).toISOString(),
-      type: 'income',
-      category: 'cat_salary',
-      amount: 4500,
-      desc: 'راتب شهري',
-    },
-    {
-      id: 'tx_init_2',
-      date: new Date(Date.now() - 86400000).toISOString(),
-      type: 'expense',
-      category: 'cat_food',
-      amount: 230,
-      desc: 'مشتريات بقالة وتموينات',
-    },
-    {
-      id: 'tx_init_3',
-      date: new Date().toISOString(),
-      type: 'expense',
-      category: 'cat_transport',
-      amount: 85,
-      desc: 'وقود ومواصلات',
-    },
-  ],
+  transactions: [],
   categories: [
     { id: 'cat_food', name: 'طعام ومشتريات', type: 'expense' },
     { id: 'cat_salary', name: 'راتب ودخل', type: 'income' },
@@ -58,258 +42,24 @@ export const INITIAL_STATE: AppState = {
     { id: 'cat_freelance', name: 'أعمال حرة', type: 'income' },
     { id: 'cat_shopping', name: 'تسوق وملابس', type: 'expense' },
   ],
-  people: [
-    {
-      id: 'p_1',
-      name: 'أحمد محمود',
-      phone: '+966501234567',
-      email: 'ahmed@example.com',
-      notes: 'شريك عمل',
-    },
-    {
-      id: 'p_2',
-      name: 'خالد العمري',
-      phone: '+966559876543',
-      email: 'khaled@example.com',
-      notes: 'مكتب التصميم',
-    },
-  ],
-  debts: [
-    {
-      id: 'd_1',
-      personId: 'p_1',
-      type: 'receivable', // مستحق لك
-      amount: 1200,
-      desc: 'سلفة مشروع التطوير',
-      date: new Date(Date.now() - 86400000 * 5).toISOString(),
-    },
-    {
-      id: 'd_2',
-      personId: 'p_2',
-      type: 'debt', // دين عليك
-      amount: 400,
-      desc: 'أتعاب تصميم شعار',
-      date: new Date(Date.now() - 86400000 * 3).toISOString(),
-    },
-  ],
+  people: [],
+  debts: [],
   payments: [],
-  works: [
-    {
-      id: 'w_1',
-      name: 'تطوير موقع التجارة الإلكترونية',
-      client: 'شركة التقنية الحديثة',
-      calculationType: 'hourly',
-      rate: 75,
-      unitName: 'ساعة',
-      status: 'active',
-      startDate: new Date(Date.now() - 86400000 * 10).toISOString().slice(0, 10),
-      endDate: new Date(Date.now() + 86400000 * 15).toISOString().slice(0, 10),
-      desc: 'بناء متجر رقمي متكامل',
-    },
-    {
-      id: 'w_2',
-      name: 'إنتاج محتوى وتصاميم سوشيال',
-      client: 'متجر الزهور',
-      calculationType: 'piece',
-      rate: 35,
-      unitName: 'تصميم',
-      status: 'active',
-      startDate: new Date(Date.now() - 86400000 * 7).toISOString().slice(0, 10),
-      endDate: new Date(Date.now() + 86400000 * 20).toISOString().slice(0, 10),
-      desc: 'تصميم بوستات انستغرام وبانرات',
-    },
-  ],
-  workLogs: [
-    {
-      id: 'wl_1',
-      workId: 'w_1',
-      date: new Date(Date.now() - 86400000 * 2).toISOString().slice(0, 10),
-      start: '09:00',
-      end: '14:00',
-      hours: 5,
-      quantity: 0,
-      desc: 'تصميم واجهة المستخدم وسلة المشتريات',
-    },
-    {
-      id: 'wl_2',
-      workId: 'w_2',
-      date: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
-      start: '10:00',
-      end: '13:00',
-      hours: 3,
-      quantity: 8,
-      desc: 'إنجاز 8 تصاميم للمنتجات الجديدة',
-    },
-  ],
-  workPayments: [
-    {
-      id: 'wp_1',
-      workId: 'w_1',
-      type: 'payment',
-      amount: 200,
-      date: new Date().toISOString(),
-      method: 'bank',
-      desc: 'دفعة مقدمة للمشروع',
-    },
-  ],
-  workGoals: [
-    {
-      id: 'wg_1',
-      workId: 'w_2',
-      type: 'weekly',
-      target: 25,
-    },
-  ],
-  budgets: [
-    {
-      id: 'b_1',
-      categoryId: 'cat_food',
-      categoryName: 'طعام ومشتريات',
-      amount: 1200,
-    },
-    {
-      id: 'b_2',
-      categoryId: 'cat_transport',
-      categoryName: 'مواصلات وبنزين',
-      amount: 400,
-    },
-  ],
-  financialGoals: [
-    {
-      id: 'fg_1',
-      name: 'صندوق الطوارئ',
-      target: 10000,
-      savedAmount: 3200,
-      deadline: new Date(Date.now() + 86400000 * 180).toISOString().slice(0, 10),
-      icon: '🛡️',
-    },
-    {
-      id: 'fg_2',
-      name: 'شراء حاسوب جديد للعمل',
-      target: 6500,
-      savedAmount: 2800,
-      deadline: new Date(Date.now() + 86400000 * 60).toISOString().slice(0, 10),
-      icon: '💻',
-    },
-  ],
-  notebooks: [
-    {
-      id: 'nb_1',
-      title: 'العمل',
-      icon: '💼',
-      children: [
-        {
-          id: 'nb_1_1',
-          title: 'مشروع موقع شركة ABC',
-          icon: '📌',
-          children: [
-            {
-              id: 'nb_1_1_1',
-              title: '5 أكتوبر - 50 قطعة',
-              icon: '📅',
-              date: '2026-10-05',
-              amount: 2500,
-              children: [
-                { id: 'nb_1_1_1_1', title: 'اجتماع مع العميل', icon: '📝', date: '2026-10-04', children: [] },
-                { id: 'nb_1_1_1_2', title: 'تسليم المرحلة الأولى', icon: '📝', date: '2026-10-05', children: [] },
-              ],
-            },
-            {
-              id: 'nb_1_1_2',
-              title: '7 أكتوبر - 10 قطع',
-              icon: '📅',
-              date: '2026-10-07',
-              amount: 500,
-              children: [
-                { id: 'nb_1_1_2_1', title: 'عمل صباحي', icon: '📝', children: [] },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'nb_2',
-      title: 'المالية والتخطيط',
-      icon: '💰',
-      children: [
-        {
-          id: 'nb_2_1',
-          title: 'الميزانية الشهرية',
-          icon: '📌',
-          children: [
-            { id: 'nb_2_1_1', title: 'يناير - دخل: 10,000 / مصروف: 7,000', icon: '💵', amount: 3000, children: [] },
-            { id: 'nb_2_1_2', title: 'فبراير - دخل: 12,000 / مصروف: 8,000', icon: '💵', amount: 4000, children: [] },
-          ],
-        },
-      ],
-    },
-  ],
-  standardNotes: [
-    {
-      id: 'sn_1',
-      title: 'أفكار لتطوير التطبيق',
-      content: 'إضافة وضع الليل، وتصدير التقارير بصيغة PDF، وتحسين أداء البحث.',
-      date: '2026-10-10',
-      category: 'تطوير',
-      tags: ['برمجة', 'أفكار'],
-    },
-    {
-      id: 'sn_2',
-      title: 'قائمة مهام الأسبوع',
-      content: '1. مراجعة الحسابات الشهرية\n2. اجتماع مع فريق التصميم\n3. إنهاء توثيق المشروع الجديد',
-      date: '2026-10-12',
-      category: 'مهام',
-      tags: ['عاجل', 'عمل'],
-    },
-  ],
-  mindMaps: [
-    {
-      id: 'mm_1',
-      title: 'خريطة مشروع التطبيق الشامل',
-      date: '2026-10-14',
-      root: {
-        id: 'root_1',
-        title: 'المشروع الرئيسي',
-        color: 'indigo',
-        children: [
-          {
-            id: 'node_1',
-            title: 'الواجهة الأمامية',
-            color: 'blue',
-            children: [
-              { id: 'node_1_1', title: 'تصميم الصفحات', color: 'cyan' },
-              { id: 'node_1_2', title: 'إدارة الحالة', color: 'cyan' },
-            ],
-          },
-          {
-            id: 'node_2',
-            title: 'قاعدة البيانات والتخزين',
-            color: 'emerald',
-            children: [
-              { id: 'node_2_1', title: 'IndexedDB', color: 'green' },
-              { id: 'node_2_2', title: 'النسخ الاحتياطي', color: 'green' },
-            ],
-          },
-          {
-            id: 'node_3',
-            title: 'التسويق والنشر',
-            color: 'purple',
-            children: [
-              { id: 'node_3_1', title: 'إطلاق النسخة التجريبية', color: 'violet' },
-            ],
-          },
-        ],
-      },
-    },
-  ],
+  workLogs: [],
+  workPayments: [],
+  workGoals: [],
+  budgets: [],
+  financialGoals: [],
+  notebooks: [],
+  standardNotes: [],
+  mindMaps: [],
   exchangeRates: { ...DEFAULT_RATES },
   settings: {
     currency: 'ر.س',
     language: 'ar',
     theme: 'purple',
     autoCloudSync: false,
-    syncKey: 'WALLET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+    syncKey: createSecureSyncKey(),
     userEmail: 'loay94an@gmail.com',
   },
   security: {
@@ -323,6 +73,7 @@ export const INITIAL_STATE: AppState = {
 
 class IndexedDBStorage {
   private dbPromise: Promise<IDBDatabase> | null = null;
+  private saveQueue: Promise<void> = Promise.resolve();
   public isIndexedDBSupported: boolean = typeof window !== 'undefined' && 'indexedDB' in window;
 
   private openDB(): Promise<IDBDatabase> {
@@ -404,33 +155,30 @@ class IndexedDBStorage {
 
   // Save app state to IndexedDB and backup mirror to localStorage
   async saveState(state: AppState): Promise<void> {
-    const updatedState = {
+    const snapshot: AppState = {
       ...state,
       lastUpdated: new Date().toISOString(),
     };
-
-    // Mirror to localStorage as instant sync fallback
-    try {
-      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(updatedState));
-    } catch (e) {
-      // Storage quota or private mode
-    }
-
-    if (!this.isIndexedDBSupported) return;
-
-    try {
-      const db = await this.openDB();
-      await new Promise<void>((resolve, reject) => {
-        const transaction = db.transaction(STATE_STORE, 'readwrite');
-        const store = transaction.objectStore(STATE_STORE);
-        const req = store.put(updatedState, 'current_state');
-
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-      });
-    } catch (err) {
-      console.error('Error saving state to IndexedDB:', err);
-    }
+    const write = async () => {
+      if (this.isIndexedDBSupported) {
+        const db = await this.openDB();
+        await new Promise<void>((resolve, reject) => {
+          const transaction = db.transaction(STATE_STORE, 'readwrite');
+          transaction.objectStore(STATE_STORE).put(snapshot, 'current_state');
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error || new Error('IndexedDB write failed'));
+          transaction.onabort = () => reject(transaction.error || new Error('IndexedDB write aborted'));
+        });
+      }
+      // Keep a compatibility mirror only after the primary write succeeds.
+      try {
+        localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(snapshot));
+      } catch (error) {
+        console.warn('Local storage mirror unavailable:', error);
+      }
+    };
+    this.saveQueue = this.saveQueue.then(write, write);
+    return this.saveQueue;
   }
 
   // Clear all data
