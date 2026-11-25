@@ -1,5 +1,13 @@
 import { AppState } from '../types';
 
+function createPortableBackup(state: AppState): AppState {
+  return {
+    ...state,
+    settings: { ...state.settings, syncKey: '', autoCloudSync: false },
+    security: { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pinLength: 4, pattern: [] },
+  };
+}
+
 export class SharingService {
   // Format human-readable financial summary
   formatSummaryMessage(state: AppState): string {
@@ -80,7 +88,7 @@ export class SharingService {
     const subject = encodeURIComponent(`نسخة احتياطية - المحفظة المالية الذكية (${dateStr})`);
 
     const summary = this.formatSummaryMessage(state);
-    const jsonString = JSON.stringify(state, null, 2);
+    const jsonString = JSON.stringify(createPortableBackup(state), null, 2);
 
     const bodyText = `${summary}
 
@@ -125,7 +133,7 @@ ${jsonString}`;
   // Download JSON backup file
   downloadJSONBackup(state: AppState): void {
     const dateStr = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(createPortableBackup(state), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
