@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BriefcaseBusiness, Calculator, BookOpen, FileText } from 'lucide-react';
+import { ArrowLeft, BriefcaseBusiness, Calculator } from 'lucide-react';
 
 interface MoreHubProps {
   onOpenWork: () => void;
