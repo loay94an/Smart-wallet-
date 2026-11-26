@@ -12,20 +12,21 @@
 :root {
   color-scheme: light;
   --primary-theme: #27272a;
-  --accent: #27272a;
-  --accent-strong: #18181b;
-  --accent-soft: #e4e4e7;
-  --canvas: #f5f5f5;
-  --surface: #ffffff;
-  --surface-muted: #f4f4f5;
-  --surface-soft: #fafafa;
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
-  --border-neutral: #e4e4e7;
+  --accent: #0F172A;
+  --accent-strong: #0B1220;
+  --accent-soft: #DCE7F3;
+  --canvas: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-muted: #F1F5F9;
+  --surface-soft: #F8FAFC;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --border-neutral: #E2E8F0;
   --shadow-neutral: rgb(24 24 27 / 0.08);
 }
 
+:root[data-theme-palette="navy-emerald"] { --accent: #0F172A; --accent-strong: #0B1220; --accent-soft: #D1FAE5; --primary-theme: #0F172A; }
 :root[data-theme-palette="mono"] { --accent: #27272a; --accent-strong: #18181b; --accent-soft: #e4e4e7; --primary-theme: #27272a; }
 :root[data-theme-palette="ocean"] { --accent: #087eaa; --accent-strong: #075985; --accent-soft: #dbeafe; --primary-theme: #087eaa; }
 :root[data-theme-palette="emerald"] { --accent: #07845b; --accent-strong: #065f46; --accent-soft: #d1fae5; --primary-theme: #07845b; }
@@ -35,16 +36,17 @@
 
 :root[data-theme-mode="dark"] {
   color-scheme: dark;
-  --canvas: #101216;
-  --surface: #191d24;
-  --surface-muted: #202630;
-  --surface-soft: #252c36;
-  --text-primary: #f3f4f6;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
-  --border-neutral: #343c48;
+  --canvas: #0B1120;
+  --surface: #1E293B;
+  --surface-muted: #263449;
+  --surface-soft: #334155;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-neutral: #334155;
   --shadow-neutral: rgb(0 0 0 / 0.28);
 }
+:root[data-theme-mode="dark"][data-theme-palette="navy-emerald"] { --accent: #34D399; --accent-strong: #6EE7B7; --accent-soft: #123C31; --primary-theme: #34D399; }
 :root[data-theme-mode="dark"][data-theme-palette="mono"] { --accent: #e5e7eb; --accent-strong: #f9fafb; --accent-soft: #374151; --primary-theme: #e5e7eb; }
 :root[data-theme-mode="dark"][data-theme-palette="ocean"] { --accent: #38bdf8; --accent-strong: #7dd3fc; --accent-soft: #12334a; --primary-theme: #38bdf8; }
 :root[data-theme-mode="dark"][data-theme-palette="emerald"] { --accent: #34d399; --accent-strong: #6ee7b7; --accent-soft: #123c31; --primary-theme: #34d399; }
@@ -145,3 +147,24 @@ input::placeholder, textarea::placeholder { color: var(--text-muted) !important;
   50% { box-shadow: 0 0 26px rgb(16 185 129 / 0.22); border-color: var(--accent); }
 }
 .animate-earnings-glow { animation: earningsGlow 2s infinite ease-in-out; }
+
+
+/* Finance-specific semantic colors remain stable across every palette. */
+[class*="text-green-"], [class*="text-emerald-"] { color: #16A34A !important; }
+[class*="text-red-"], [class*="text-rose-"] { color: #DC2626 !important; }
+[class*="text-amber-"], [class*="text-orange-"] { color: #D97706 !important; }
+:root[data-theme-mode="dark"] [class*="text-green-"],
+:root[data-theme-mode="dark"] [class*="text-emerald-"] { color: #4ADE80 !important; }
+:root[data-theme-mode="dark"] [class*="text-red-"],
+:root[data-theme-mode="dark"] [class*="text-rose-"] { color: #F87171 !important; }
+:root[data-theme-mode="dark"] [class*="text-amber-"],
+:root[data-theme-mode="dark"] [class*="text-orange-"] { color: #FBBF24 !important; }
+
+/* Main balance card: navy-to-blue bank-card gradient. */
+.wallet-balance-card[class*="bg-gradient"] {
+  background: linear-gradient(115deg, #0F172A 0%, #1E3A8A 100%) !important;
+  border-color: rgb(255 255 255 / 0.14) !important;
+}
+.wallet-balance-card [class*="text-white"] { color: #FFFFFF !important; }
+.wallet-balance-card [class*="text-purple-"],
+.wallet-balance-card [class*="text-indigo-"] { color: #E2E8F0 !important; }
