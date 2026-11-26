@@ -512,18 +512,21 @@ function mergeById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
 }
 
 export function mergeAppState(current: AppState, incoming: AppState): AppState {
-  // Merge categories by name
-  const categoryNames = new Set(current.categories.map((c) => c.name.trim()));
+  // Merge categories by normalized name AND type so income and expense categories stay distinct.
   const mergedCategories = [...current.categories];
+  const categoryByKey = new Map(
+    current.categories.map((category) => [category.type + ':' + category.name.trim().toLocaleLowerCase(), category.id])
+  );
   const catIdMap = new Map<string, string>();
 
-  incoming.categories.forEach((c) => {
-    const existing = current.categories.find((ex) => ex.name.trim() === c.name.trim());
-    if (existing) {
-      catIdMap.set(c.id, existing.id);
+  incoming.categories.forEach((category) => {
+    const key = category.type + ':' + category.name.trim().toLocaleLowerCase();
+    const existingId = categoryByKey.get(key);
+    if (existingId) {
+      catIdMap.set(category.id, existingId);
     } else {
-      mergedCategories.push(c);
-      categoryNames.add(c.name.trim());
+      mergedCategories.push(category);
+      categoryByKey.set(key, category.id);
     }
   });
 
