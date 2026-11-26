@@ -103,22 +103,28 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const [isExportMenuOpen, setIsExportMenuOpen] = useState<boolean>(false);
   const [isProjectMenuOpen, setIsProjectMenuOpen] = useState<boolean>(false);
 
-  // Smart Timers State (per workId) - allows simultaneous running timers with localStorage persistence
-  const [workTimers, setWorkTimers] = useState<
-    Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null }>
-  >(() => {
+  // Timers use a persisted wall-clock checkpoint so elapsed time survives app closure.
+  type WorkTimer = { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null; lastTickAt: number | null };
+  const [workTimers, setWorkTimers] = useState<Record<string, WorkTimer>>(() => {
     try {
       const saved = localStorage.getItem('smart_work_timers_state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const result: Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null }> = {};
+        const now = Date.now();
+        const result: Record<string, WorkTimer> = {};
         for (const [k, v] of Object.entries(parsed)) {
           const val = v as any;
+          const isRunning = Boolean(val.isRunning);
+          const lastTickAt = val.lastTickAt ? Number(val.lastTickAt) : null;
+          const offlineSeconds = isRunning && lastTickAt
+            ? Math.max(0, Math.floor((now - lastTickAt) / 1000))
+            : 0;
           result[k] = {
-            seconds: Number(val.seconds) || 0,
-            isRunning: Boolean(val.isRunning),
+            seconds: (Number(val.seconds) || 0) + offlineSeconds,
+            isRunning,
             pieces: Number(val.pieces) || 0,
             startTime: val.startTime ? new Date(val.startTime) : null,
+            lastTickAt: isRunning ? now : null,
           };
         }
         return result;
@@ -135,7 +141,14 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   // Restore timer data when a backup is imported or replaced.
   useEffect(() => {
     if (!state.workTimers) return;
-    setWorkTimers(state.workTimers as Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null }>);
+    const restoredAt = Date.now();
+    const restored = Object.fromEntries(Object.entries(state.workTimers).map(([id, value]: [string, any]) => {
+      const running = Boolean(value?.isRunning);
+      const checkpoint = value?.lastTickAt ? Number(value.lastTickAt) : null;
+      const offline = running && checkpoint ? Math.max(0, Math.floor((restoredAt - checkpoint) / 1000)) : 0;
+      return [id, { ...value, seconds: (Number(value?.seconds) || 0) + offline, startTime: value?.startTime ? new Date(value.startTime) : null, lastTickAt: running ? restoredAt : null }];
+    }));
+    setWorkTimers(restored as Record<string, WorkTimer>);
     try {
       localStorage.setItem('smart_work_timers_state', JSON.stringify(state.workTimers));
     } catch (error) {
@@ -143,6 +156,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     }
   }, [state.workTimers]);
 
+  // Persist checkpoints frequently; the last checkpoint lets us recover time after force-close.
   // Persist workTimers to localStorage on changes
   useEffect(() => {
     try {
@@ -151,6 +165,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         serialized[k] = {
           ...v,
           startTime: v.startTime ? (v.startTime instanceof Date ? v.startTime.toISOString() : v.startTime) : null,
+          lastTickAt: v.lastTickAt ?? null,
         };
       }
       localStorage.setItem('smart_work_timers_state', JSON.stringify(serialized));
@@ -161,26 +176,28 @@ export const WorkPage: React.FC<WorkPageProps> = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
+      const now = Date.now();
       setWorkTimers((prev) => {
-        let hasRunning = false;
+        let changed = false;
         const updated = { ...prev };
         for (const workId of Object.keys(updated)) {
-          if (updated[workId]?.isRunning) {
-            hasRunning = true;
-            updated[workId] = {
-              ...updated[workId],
-              seconds: updated[workId].seconds + 1,
-            };
+          const timer = updated[workId];
+          if (!timer?.isRunning) continue;
+          const checkpoint = timer.lastTickAt ?? now;
+          const elapsed = Math.max(0, Math.floor((now - checkpoint) / 1000));
+          if (elapsed > 0 || timer.lastTickAt == null) {
+            changed = true;
+            updated[workId] = { ...timer, seconds: timer.seconds + elapsed, lastTickAt: now };
           }
         }
-        return hasRunning ? updated : prev;
+        return changed ? updated : prev;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const getTimerFor = (workId: string) =>
-    workTimers[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null };
+  const getTimerFor = (workId: string): WorkTimer =>
+    workTimers[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
 
   const currentTimer = activeWork ? getTimerFor(activeWork.id) : { seconds: 0, isRunning: false, pieces: 0, startTime: null };
 
@@ -193,6 +210,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           ...current,
           isRunning: true,
           startTime: current.startTime || new Date(),
+          lastTickAt: Date.now(),
         },
       };
     });
@@ -207,6 +225,8 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         [workId]: {
           ...current,
           isRunning: false,
+          seconds: current.seconds + (current.lastTickAt ? Math.max(0, Math.floor((Date.now() - current.lastTickAt) / 1000)) : 0),
+          lastTickAt: null,
         },
       };
     });
@@ -293,7 +313,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     // Reset this work's timer
     setWorkTimers((prev) => ({
       ...prev,
-      [workId]: { seconds: 0, isRunning: false, pieces: 0, startTime: null },
+      [workId]: { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null },
     }));
   };
 
