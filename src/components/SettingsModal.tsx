@@ -46,7 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   // All hooks called unconditionally at top level
 
-  const [activeTheme, setActiveTheme] = useState<string>(state.settings?.theme || 'purple');
+  const [activeTheme, setActiveTheme] = useState<string>('purple');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
   const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
   const [userEmail, setUserEmail] = useState<string>(savedEmail);
@@ -60,7 +60,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTheme(state.settings?.theme || 'purple');
+      setActiveTheme('purple');
       setCurrency(state.settings?.currency || 'ر.س');
       setUserEmail(state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || ''));
       setSecurityType(state.security?.type || 'off');
