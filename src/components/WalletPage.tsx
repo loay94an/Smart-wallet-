@@ -3,6 +3,7 @@ import { AppState, Transaction, Category } from '../types';
 import { formatCurrency } from '../services/i18n';
 import { ConfirmModal } from './ConfirmModal';
 import { exportService } from '../services/exportService';
+import { saveExportBlob } from '../services/fileExport';
 import {
   Receipt,
   Search,
@@ -216,39 +217,18 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       ['Date', 'Type', 'Category', 'Amount', 'Description'],
       ...filteredTransactions.map((tx) => {
         const cat = state.categories.find((c) => c.id === tx.category);
-        return [
-          tx.date,
-          tx.type === 'income' ? 'Income' : 'Expense',
-          cat?.name || '',
-          tx.amount,
-          tx.desc || '',
-        ];
+        return [tx.date, tx.type === 'income' ? 'Income' : 'Expense', cat?.name || '', tx.amount, tx.desc || ''];
       }),
     ];
-    const csvContent = '\uFEFF' + rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const csvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csvContent = '\uFEFF' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+    void saveExportBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }),
+      `transactions-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const exportJSON = () => {
     const blob = new Blob([JSON.stringify(filteredTransactions, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `transactions-${new Date().toISOString().slice(0, 10)}.json`;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    void saveExportBlob(blob, `transactions-${new Date().toISOString().slice(0, 10)}.json`);
   };
 
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState<boolean>(false);

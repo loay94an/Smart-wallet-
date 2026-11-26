@@ -70,8 +70,16 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   };
 
   // Never include the local PIN/pattern or cloud bearer key in a portable backup.
+  let savedWorkTimers = state.workTimers || {};
+  try {
+    const storedTimers = localStorage.getItem('smart_work_timers_state');
+    if (storedTimers) savedWorkTimers = JSON.parse(storedTimers);
+  } catch (error) {
+    console.warn('Could not read work timers for backup preview:', error);
+  }
   const safeBackupState: AppState = {
     ...state,
+    workTimers: savedWorkTimers,
     settings: { ...state.settings, syncKey: '', autoCloudSync: false },
     security: { enabled: false, type: 'off', pin: '', pattern: [] },
   };
@@ -111,8 +119,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   };
 
   const handleEmailExport = () => {
-    sharingService.sendBackupToEmail(state, recipientEmail);
-    showToast(isRTL ? 'جاري فتح برنامج البريد الإلكتروني...' : 'Opening email client...');
+    const opened = sharingService.sendBackupToEmail(state, recipientEmail);
+    if (!opened) {
+      showToast(isRTL ? 'أدخل بريدًا إلكترونيًا صحيحًا أولاً. سيتم إرسال ملخص مالي فقط؛ استخدم تحميل JSON لإرفاق النسخة الكاملة.' : 'Enter a valid email address. This sends a summary only; use JSON download for the full backup.');
+      return;
+    }
+    showToast(isRTL ? 'تم فتح تطبيق البريد لإرسال الملخص المالي' : 'Opening email to send the financial summary');
   };
 
   const handleWhatsAppExport = () => {
@@ -179,6 +191,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({
         finalStateToApply = mergeAppState(state, inspection.state);
       }
 
+      if (finalStateToApply.workTimers) {
+        localStorage.setItem('smart_work_timers_state', JSON.stringify(finalStateToApply.workTimers));
+      }
       onApplyBackup(finalStateToApply, isMerged);
 
       // Trigger Confetti
@@ -337,7 +352,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-xs font-black text-purple-200">
                     <Mail className="h-4 w-4 text-purple-400" />
-                    <span>{isRTL ? 'مشاركة النسخة عبر البريد الإلكتروني' : 'Share Backup by Email'}</span>
+                    <span>{isRTL ? 'إرسال الملخص المالي عبر البريد الإلكتروني' : 'Email Financial Summary'}</span>
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -345,7 +360,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                     type="email"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
-                    placeholder={isRTL ? "البريد الإلكتروني (اختياري)" : "Email address (optional)"}
+                    placeholder={isRTL ? "البريد الإلكتروني" : "Email address"}
                     className="flex-1 rounded-xl border border-purple-800/50 bg-[#0f0f24] px-3 py-2 text-xs text-white placeholder-purple-400/40 outline-none focus:border-purple-400"
                   />
                   <button

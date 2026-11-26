@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.loay94an.smartwallet',
-  appName: 'المحفظة الذكية',
+  appName: 'المحفظة المالية الذكية',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
