@@ -30,6 +30,8 @@ interface SettingsModalProps {
   language: 'ar' | 'en';
 }
 
+const normalizeTheme = (value?: string) => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' }[value || ''] || value || 'mono');
+
 const THEME_OPTIONS = [
   { id: 'mono', nameAr: 'أحادي', nameEn: 'Monochrome', color: '#27272a', secondary: '#a1a1aa' },
   { id: 'ocean', nameAr: 'أزرق محيطي', nameEn: 'Ocean Blue', color: '#087eaa', secondary: '#38bdf8' },
@@ -53,7 +55,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   // All hooks called unconditionally at top level
 
-  const [activeTheme, setActiveTheme] = useState<string>(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'mono'));
+  const [activeTheme, setActiveTheme] = useState<string>(normalizeTheme(state.settings?.theme));
   const [appearance, setAppearance] = useState<'light' | 'dark'>(state.settings?.appearance || 'light');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
   const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
