@@ -11,7 +11,6 @@ import {
   ChevronDown,
   FileSpreadsheet,
   FileText,
-  Calculator,
   SlidersHorizontal,
   X,
   ExternalLink,
@@ -252,28 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {isRTL ? 'الأدوات والمشاركة' : 'Tools & Share'}
                   </div>
 
-                  {onOpenTools && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        onOpenTools();
-                      }}
-                      className="w-full flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-bold text-amber-300 hover:bg-amber-950/40 hover:text-white transition-all text-start"
-                    >
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
-                        <Calculator className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-xs font-extrabold">{isRTL ? 'الأدوات المالية والحاسبات' : 'Financial Tools & Calc'}</div>
-                        <div className="text-[10px] text-amber-300/70 font-normal">
-                          {isRTL ? 'حاسبة الزكاة، القروض، محول العملات' : 'Zakat, loan calculator, currency'}
-                        </div>
-                      </div>
-                    </button>
-                  )}
-
-                  {/* Share Report */}
+                                    {/* Share Report */}
                   <button
                     type="button"
                     onClick={() => {
