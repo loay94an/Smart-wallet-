@@ -471,6 +471,7 @@ export function parseAndInspectBackup(input: string | object): {
       exchangeRates: root.exchangeRates ? { ...DEFAULT_RATES, ...root.exchangeRates } : { ...DEFAULT_RATES },
       settings,
       security,
+      workTimers: root.workTimers && typeof root.workTimers === 'object' ? root.workTimers : {},
       lastUpdated: root.lastUpdated || new Date().toISOString(),
     };
 
