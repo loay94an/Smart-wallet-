@@ -185,6 +185,6 @@ export interface AppState {
   exchangeRates: Record<string, number>;
   settings: SettingsConfig;
   security: SecurityConfig;
-  workTimers?: Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: string | null }>;
+  workTimers?: Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: string | null; startedAt?: number | null; lastTickAt?: number | null }>;
   lastUpdated?: string;
 }
