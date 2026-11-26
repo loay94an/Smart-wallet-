@@ -748,14 +748,17 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             const wTimer = wTimerBase ? { ...wTimerBase, seconds: getElapsedSeconds(wTimerBase) } : undefined;
             const isThisRunning = wTimer?.isRunning;
             return (
-              <div
+              <button
                 key={w.id}
-                className={`flex items-center gap-2 rounded-2xl border px-3.5 py-2 transition-all cursor-pointer whitespace-nowrap text-xs font-bold ${
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={isRTL ? `اختيار العمل ${w.name}` : `Select work ${w.name}`}
+                onClick={() => setSelectedWorkId(w.id)}
+                className={`flex items-center gap-2 rounded-2xl border px-3.5 py-2 transition-all whitespace-nowrap text-xs font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                   isSelected
                     ? 'border-purple-500 bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                     : 'border-purple-900/40 bg-[#161633] text-purple-300 hover:border-purple-700/60'
                 }`}
-                onClick={() => setSelectedWorkId(w.id)}
               >
                 <span>{w.calculationType === 'piece' ? '📦' : '⏱️'}</span>
                 <span>{w.name}</span>
@@ -767,7 +770,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                     <span>{formatTimer(wTimer.seconds)}</span>
                   </span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
