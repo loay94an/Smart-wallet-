@@ -586,6 +586,14 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  // Selected work appears first, then other running works; all remaining
+  // works retain their existing order.
+  const orderedWorks = [...state.works].sort((a, b) => {
+    const priority = (workId: string) =>
+      workId === selectedWorkId ? 0 : workTimers[workId]?.isRunning ? 1 : 2;
+    return priority(a.id) - priority(b.id);
+  });
+
   return (
     <div className="space-y-5 pb-20 pt-2">
       {/* Header & Actions */}
@@ -665,7 +673,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       {/* Work Tabs */}
       {state.works.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {state.works.map((w) => {
+          {orderedWorks.map((w) => {
             const isSelected = w.id === selectedWorkId;
             const wTimerBase = workTimers[w.id];
             const wTimer = wTimerBase ? { ...wTimerBase, seconds: getElapsedSeconds(wTimerBase) } : undefined;
