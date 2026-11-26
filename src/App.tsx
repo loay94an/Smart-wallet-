@@ -150,15 +150,16 @@ export default function App() {
     }));
   };
 
-  const handleAddCategory = (cat: Omit<Category, 'id'>) => {
+  const handleAddCategory = (cat: Omit<Category, 'id'>): string => {
     const newCat: Category = {
-      id: 'cat_' + Date.now().toString(36),
+      id: 'cat_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       ...cat,
     };
     setState((prev) => ({
       ...prev,
       categories: [...prev.categories, newCat],
     }));
+    return newCat.id;
   };
 
   const handleDeleteCategory = (id: string) => {
