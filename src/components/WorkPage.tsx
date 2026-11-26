@@ -11,7 +11,6 @@ import { formatCurrency } from '../services/i18n';
 import { ConfirmModal } from './ConfirmModal';
 import { exportService } from '../services/exportService';
 import { saveExportBlob } from '../services/fileExport';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
   Briefcase,
@@ -556,20 +555,10 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
 
   const exportPDF = async () => {
-    if (!activeWork || !reportRef.current) return;
+    if (!activeWork) return;
     setIsExportingPDF(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      await saveExportBlob(pdf.output('blob'), `work-report-${activeWork.name}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      await exportService.exportWorkReportPDF(state, activeWork.id, isRTL);
     } catch (e) {
       console.error('PDF export error:', e);
     } finally {
@@ -656,7 +645,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      exportService.exportWorkToExcel(state, isRTL);
+                      exportService.exportWorkToExcel(state, isRTL, activeWork.id);
                       setIsExportMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-green-300 hover:bg-green-950/40 rounded-xl transition-all"
