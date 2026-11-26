@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { SecurityConfig } from '../types';
 import { verifyPinCredential } from '../services/security';
-import { Lock, Delete, KeyRound, Grid, ShieldAlert } from 'lucide-react';
+import { Lock, Delete, ShieldAlert } from 'lucide-react';
 
 interface LockScreenProps {
   security: SecurityConfig;
@@ -10,13 +10,13 @@ interface LockScreenProps {
 }
 
 export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, language }) => {
-  const [mode, setMode] = useState<'pin' | 'pattern'>(security.type === 'pattern' ? 'pattern' : 'pin');
   const [pinInput, setPinInput] = useState<string>('');
   const [patternInput, setPatternInput] = useState<number[]>([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const isRTL = language === 'ar';
 
+  const mode = security.type === 'pattern' ? 'pattern' : 'pin';
   const requiredLength = security.pinHash ? (security.pinLength || 4) : (security.pin ? security.pin.length : 4);
 
   const handlePinDigit = async (digit: string) => {
@@ -115,30 +115,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
         <p className="mt-1 text-sm text-purple-200/70">
           {isRTL ? 'التطبيق مقفل لحماية بياناتك المالية' : 'Locked for security'}
         </p>
-
-        {/* Lock Mode Switcher if both configured */}
-        <div className="mt-5 flex gap-2 rounded-xl bg-purple-950/40 p-1 border border-purple-800/40">
-          <button
-            type="button"
-            onClick={() => setMode('pin')}
-            className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'pin' ? 'bg-purple-600 text-white shadow-md' : 'text-purple-300 hover:text-white'
-            }`}
-          >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>PIN</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('pattern')}
-            className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'pattern' ? 'bg-purple-600 text-white shadow-md' : 'text-purple-300 hover:text-white'
-            }`}
-          >
-            <Grid className="h-3.5 w-3.5" />
-            <span>{isRTL ? 'النمط' : 'Pattern'}</span>
-          </button>
-        </div>
 
         {errorMsg && (
           <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-red-500/20 py-1.5 text-xs font-bold text-red-300 border border-red-500/40 animate-bounce">
