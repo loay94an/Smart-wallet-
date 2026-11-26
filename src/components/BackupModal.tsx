@@ -70,8 +70,16 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   };
 
   // Never include the local PIN/pattern or cloud bearer key in a portable backup.
+  let savedWorkTimers = state.workTimers || {};
+  try {
+    const storedTimers = localStorage.getItem('smart_work_timers_state');
+    if (storedTimers) savedWorkTimers = JSON.parse(storedTimers);
+  } catch (error) {
+    console.warn('Could not read work timers for backup preview:', error);
+  }
   const safeBackupState: AppState = {
     ...state,
+    workTimers: savedWorkTimers,
     settings: { ...state.settings, syncKey: '', autoCloudSync: false },
     security: { enabled: false, type: 'off', pin: '', pattern: [] },
   };
@@ -183,6 +191,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({
         finalStateToApply = mergeAppState(state, inspection.state);
       }
 
+      if (finalStateToApply.workTimers) {
+        localStorage.setItem('smart_work_timers_state', JSON.stringify(finalStateToApply.workTimers));
+      }
       onApplyBackup(finalStateToApply, isMerged);
 
       // Trigger Confetti
