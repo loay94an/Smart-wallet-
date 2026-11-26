@@ -2,20 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppState, SecurityConfig } from '../types';
 import { dbService } from '../services/db';
 import { createPinCredential } from '../services/security';
-import { sharingService } from '../services/sharing';
-import { parseAndInspectBackup } from '../services/backupParser';
 import {
   Settings,
   Palette,
   Globe,
   DollarSign,
   Shield,
-  Upload,
-  Download,
   Trash2,
   Database,
   X,
-  Mail,
   Check,
   Sparkles,
 } from 'lucide-react';
@@ -26,7 +21,6 @@ interface SettingsModalProps {
   state: AppState;
   onUpdateSettings: (newSettings: Partial<AppState['settings']>) => void;
   onUpdateSecurity: (newSecurity: SecurityConfig) => void;
-  onImportFullState: (newState: AppState) => void;
   onResetAllData: () => void;
   onOpenBackupCenter?: () => void;
   language: 'ar' | 'en';
@@ -47,7 +41,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   state,
   onUpdateSettings,
   onUpdateSecurity,
-  onImportFullState,
   onResetAllData,
   onOpenBackupCenter,
   language,
@@ -55,7 +48,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const isRTL = language === 'ar';
 
   // All hooks called unconditionally at top level
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTheme, setActiveTheme] = useState<string>(state.settings?.theme || 'purple');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
@@ -130,49 +122,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     } catch (error: any) {
       showStatus(isRTL ? 'تعذر حفظ إعدادات الحماية: ' + (error?.message || 'خطأ غير معروف') : 'Could not save security settings', true);
     }
-  };
-
-  const handleExportBackup = async () => {
-    try {
-      await sharingService.downloadJSONBackup({
-        ...state,
-        settings: { ...state.settings, syncKey: '', autoCloudSync: false },
-        security: { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pattern: [] },
-      });
-      showStatus(isRTL ? '✅ تم تجهيز ملف JSON للمشاركة أو الحفظ' : '✅ JSON backup is ready to save or share');
-    } catch (e: any) {
-      showStatus(isRTL ? 'فشل التصدير: ' + e.message : 'Export failed: ' + e.message, true);
-    }
-  };
-
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const result = parseAndInspectBackup(text);
-        if (result.success && result.inspection) {
-          onImportFullState(result.inspection.state);
-          showStatus(
-            isRTL
-              ? `✅ تم استيراد النسخة بنجاح (${result.inspection.transactionsCount} معاملة)!`
-              : `✅ Backup imported (${result.inspection.transactionsCount} txs)!`
-          );
-        } else {
-          showStatus(result.error || (isRTL ? 'الملف غير صالح أو تالف!' : 'Invalid backup file!'), true);
-        }
-      } catch (err: any) {
-        showStatus(isRTL ? 'خطأ أثناء قراءة الملف: ' + err.message : 'Error reading file', true);
-      } finally {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
-    };
-    reader.readAsText(file);
   };
 
   return (
@@ -343,86 +292,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
         </div>
 
-        {/* 6. Import / Export / Backup Center Link */}
-        <div className="space-y-3 border-t border-purple-900/30 pt-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-purple-300">
-              {isRTL ? 'النسخ الاحتياطي واسترجاع البيانات' : 'Backup & Restore'}
-            </span>
-            {onOpenBackupCenter && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenBackupCenter();
-                }}
-                className="flex items-center gap-1 text-[11px] font-black text-cyan-400 hover:text-cyan-300"
-              >
-                <Sparkles className="h-3 w-3" />
-                <span>{isRTL ? 'فتح مركز النسخ والاستيراد المتكامل' : 'Open Full Backup Center'}</span>
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={handleExportBackup}
-              className="flex items-center justify-center gap-2 rounded-xl border border-emerald-700/50 bg-emerald-950/30 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-900/40 active:scale-95"
-            >
-              <Download className="h-4 w-4 text-emerald-400" />
-              <span>{isRTL ? 'تصدير نسخة (JSON)' : 'Export JSON'}</span>
-            </button>
-
-            <label className="flex items-center justify-center gap-2 rounded-xl border border-cyan-700/50 bg-cyan-950/30 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/40 active:scale-95 cursor-pointer">
-              <Upload className="h-4 w-4 text-cyan-400" />
-              <span>{isRTL ? 'استيراد ملف (JSON)' : 'Import JSON'}</span>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,.txt"
-                onChange={handleImportFile}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Reset All Data with in-UI confirmation */}
-          {!confirmingReset ? (
-            <button
-              type="button"
-              onClick={() => setConfirmingReset(true)}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-red-900/40 bg-red-950/20 py-2 text-xs font-bold text-red-400 hover:bg-red-950/40"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span>{isRTL ? 'حذف كافة البيانات وإعادة الضبط' : 'Reset All Data'}</span>
-            </button>
-          ) : (
-            <div className="rounded-xl border border-red-600/60 bg-red-950/40 p-2.5 text-center space-y-2 animate-fadeIn">
-              <span className="text-[11px] font-bold text-red-300 block">
-                {isRTL ? 'هل أنت متأكد تماماً من رغبتك في حذف كافة البيانات؟' : 'Are you sure you want to delete all data?'}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmingReset(false)}
-                  className="flex-1 rounded-lg bg-[#14142d] py-1.5 text-xs font-bold text-purple-300"
-                >
-                  {isRTL ? 'إلغاء' : 'Cancel'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onResetAllData();
-                    onClose();
-                  }}
-                  className="flex-1 rounded-lg bg-red-600 py-1.5 text-xs font-black text-white hover:bg-red-500"
-                >
-                  {isRTL ? 'نعم، حذف نهائي' : 'Yes, Delete'}
-                </button>
-              </div>
+        {/* 6. Unified backup, export and sharing entry point */}
+        <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-[#171736] to-[#102b35] p-4 space-y-3">
+          <div className="flex items-center gap-2 text-purple-200">
+            <Database className="h-4 w-4 text-cyan-400" />
+            <div>
+              <p className="text-xs font-black">{isRTL ? 'التصدير والمشاركة والنسخ الاحتياطي' : 'Export, Share & Backup'}</p>
+              <p className="text-[10px] text-purple-300/70">{isRTL ? 'واجهة موحدة لحفظ البيانات ومشاركتها واستعادتها' : 'One place to export, share and restore your data'}</p>
             </div>
-          )}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenBackupCenter?.();
+            }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-cyan-500/50 bg-cyan-600/20 py-3 text-xs font-black text-cyan-200 hover:bg-cyan-600/35 active:scale-[0.99]"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>{isRTL ? 'فتح مركز التصدير والمشاركة الموحد' : 'Open Unified Export & Share Center'}</span>
+          </button>
         </div>
 
         {/* Save button */}
