@@ -65,7 +65,7 @@ values.mkdir(parents=True, exist_ok=True)
 
 # Explicitly wire both launcher attributes in the generated Capacitor manifest.
 manifest = MANIFEST.read_text(encoding="utf-8")
-match = re.search(r"<application\\b[^>]*>", manifest, flags=re.DOTALL)
+match = re.search(r"<application\b[^>]*>", manifest, flags=re.DOTALL)
 if not match:
     raise SystemExit("Could not find the <application> element in AndroidManifest.xml")
 
@@ -74,7 +74,7 @@ for attribute, value in (
     ("icon", "@mipmap/ic_launcher"),
     ("roundIcon", "@mipmap/ic_launcher_round"),
 ):
-    pattern = rf'android:{attribute}\\s*=\\s*"[^"]*"'
+    pattern = rf'android:{attribute}\s*=\s*"[^"]*"'
     replacement = f'android:{attribute}="{value}"'
     if re.search(pattern, application_tag):
         application_tag = re.sub(pattern, replacement, application_tag)
