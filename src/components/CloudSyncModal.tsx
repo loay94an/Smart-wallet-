@@ -38,6 +38,8 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 }) => {
   const isRTL = language === 'ar';
   const [syncKeyInput, setSyncKeyInput] = useState<string>(state.settings.syncKey || '');
+  const [serverUrlInput, setServerUrlInput] = useState<string>(state.settings.syncServerUrl || '');
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [isPushing, setIsPushing] = useState<boolean>(false);
   const [isPulling, setIsPulling] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -58,11 +60,29 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   });
 
   useEffect(() => {
-    if (isOpen && state.settings.syncKey) {
-      setSyncKeyInput(state.settings.syncKey);
-      checkCloudStatus(state.settings.syncKey, state.settings.syncServerUrl);
+    if (!isOpen) return;
+    setSyncKeyInput(state.settings.syncKey || '');
+    setServerUrlInput(state.settings.syncServerUrl || '');
+    setCloudInfo(null);
+  }, [isOpen]);
+
+  // Check only after the user pauses typing; never send a request per keystroke.
+  useEffect(() => {
+    if (!isOpen || !syncKeyInput.trim()) {
+      setCloudInfo(null);
+      return;
     }
-  }, [isOpen, state.settings.syncKey, state.settings.syncServerUrl]);
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const result = await cloudSyncService.checkCloudStatus(syncKeyInput.trim(), serverUrlInput.trim());
+        if (!cancelled) setCloudInfo(result);
+      } catch {
+        if (!cancelled) setCloudInfo(null);
+      }
+    }, 650);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [isOpen, syncKeyInput, serverUrlInput]);
 
   const checkCloudStatus = async (key: string, serverUrl = state.settings.syncServerUrl) => {
     if (!key.trim()) return;
@@ -162,45 +182,41 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-3xl border border-cyan-500/30 bg-[#14142d] p-6 shadow-2xl space-y-5">
+      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-3xl border border-[var(--border-neutral)] bg-[var(--canvas)] p-4 sm:p-5 shadow-2xl space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-purple-900/40 pb-3">
+        <div className="flex items-center justify-between border-b border-[var(--border-neutral)] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-600/20 text-cyan-400 border border-cyan-500/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border-neutral)]">
               <Cloud className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">{isRTL ? 'المزامنة السحابية' : 'Cloud Sync'}</h3>
-              <p className="text-[11px] text-purple-300/70">
+              <h3 className="text-base font-black text-[var(--text-primary)]">{isRTL ? 'المزامنة السحابية' : 'Cloud Sync'}</h3>
+              <p className="text-[11px] text-[var(--text-secondary)]">
                 {isRTL ? 'مزامنة بياناتك المالية بين الهاتف والكمبيوتر' : 'Sync your financial data across all devices'}
               </p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-purple-400 hover:text-white">
+          <button type="button" onClick={onClose} className="rounded-xl p-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Cloud API endpoint */}
-        <div className="space-y-2 rounded-2xl border border-purple-900/40 bg-[#181838] p-4">
-          <label className="block text-xs font-bold text-purple-200">
-            {isRTL ? 'عنوان خادم المزامنة (HTTPS)' : 'Sync server URL (HTTPS)'}
-          </label>
-          <input
-            type="url"
-            dir="ltr"
-            value={state.settings.syncServerUrl || ''}
-            onChange={(e) => onUpdateSyncServerUrl(e.target.value.trim())}
-            placeholder="https://your-api.example.com"
-            className="w-full rounded-xl border border-purple-900/60 bg-[#101026] p-3 text-xs text-white outline-none focus:border-cyan-400"
-          />
-          <p className="text-[10px] leading-5 text-purple-300/60">
-            {isRTL ? 'مطلوب في نسخة Android. يجب نشر خادم server.ts على استضافة HTTPS وإدخال رابطه هنا. اتركه فارغاً لاستخدام نفس نطاق الموقع في نسخة الويب.' : 'Required on Android. Deploy server.ts to an HTTPS host and enter its URL. Leave blank to use the website origin on web.'}
-          </p>
-        </div>
+        {/* Advanced server settings are hidden unless needed. */}
+        <section className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3">
+          <button type="button" aria-expanded={showAdvanced} onClick={() => setShowAdvanced((value) => !value)} className="flex w-full items-center justify-between text-start text-xs font-bold text-[var(--text-primary)]">
+            <span>{isRTL ? 'إعدادات متقدمة للخادم' : 'Advanced server settings'}</span>
+            <span className="text-[var(--accent)]">{showAdvanced ? '−' : '+'}</span>
+          </button>
+          {showAdvanced && <div className="mt-3 space-y-2">
+            <label className="block text-xs font-bold text-[var(--text-secondary)]">{isRTL ? 'عنوان خادم المزامنة (HTTPS)' : 'Sync server URL (HTTPS)'}</label>
+            <input type="url" dir="ltr" value={serverUrlInput} onChange={(e) => setServerUrlInput(e.target.value)} onBlur={() => onUpdateSyncServerUrl(serverUrlInput.trim())} placeholder="https://your-api.example.com" className="w-full rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-3 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
+            <p className="text-[10px] leading-5 text-[var(--text-secondary)]">{isRTL ? 'مطلوب في نسخة Android. اتركه فارغًا لاستخدام نطاق الموقع في نسخة الويب.' : 'Required on Android. Leave blank to use the website origin on web.'}</p>
+            <button type="button" onClick={() => { onUpdateSyncServerUrl(serverUrlInput.trim()); setShowAdvanced(false); }} className="rounded-lg bg-[var(--accent)] px-3 py-2 text-xs font-bold text-white">{isRTL ? 'حفظ عنوان الخادم' : 'Save server URL'}</button>
+          </div>}
+        </section>
 
         {/* Sync Key Input & Controls */}
-        <div className="space-y-2 rounded-2xl border border-purple-900/40 bg-[#181838] p-4">
+        <div className="space-y-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-4">
           <label className="text-xs font-bold text-purple-200 flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <KeyRound className="h-3.5 w-3.5 text-cyan-400" />
@@ -221,10 +237,9 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
               value={syncKeyInput}
               onChange={(e) => {
                 setSyncKeyInput(e.target.value.toUpperCase());
-                checkCloudStatus(e.target.value.toUpperCase());
               }}
               placeholder="SW-... (رمز عشوائي آمن)"
-              className="flex-1 rounded-xl border border-purple-900/60 bg-[#101026] p-2.5 font-mono text-xs font-black tracking-wider text-cyan-300 uppercase outline-none focus:border-cyan-400"
+              className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-2.5 font-mono text-xs font-black tracking-wider text-[var(--text-primary)] uppercase outline-none focus:border-[var(--accent)]"
             />
             <button
               type="button"
@@ -244,21 +259,21 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
         {/* Cloud Status Card */}
         {cloudInfo && (
-          <div className="rounded-2xl border border-purple-900/30 bg-[#161633] p-3 text-xs flex items-center justify-between">
+          <div className="rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
                   cloudInfo.exists ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
                 }`}
               />
-              <span className="font-bold text-white">
+              <span className="font-bold text-[var(--text-primary)]">
                 {cloudInfo.exists
                   ? isRTL ? 'توجد نسخة محفوظة على السحابة' : 'Cloud backup exists'
                   : isRTL ? 'لا توجد نسخة سحابية سابقة بهذا الرمز' : 'No cloud backup yet'}
               </span>
             </div>
             {cloudInfo.updatedAt && (
-              <span className="text-[10px] text-purple-300/70">
+              <span className="text-[10px] text-[var(--text-secondary)]">
                 {new Date(cloudInfo.updatedAt).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
               </span>
             )}
@@ -324,7 +339,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         </div>
 
         {/* Security notice */}
-        <div className="flex items-center gap-2 text-[11px] text-purple-300/60 border-t border-purple-900/30 pt-3">
+        <div className="flex items-center gap-2 text-[11px] text-[var(--text-secondary)] border-t border-[var(--border-neutral)] pt-3">
           <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
           <span>
             {isRTL
