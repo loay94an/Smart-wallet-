@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppState, SecurityConfig } from '../types';
 import { dbService } from '../services/db';
 import { createPinCredential } from '../services/security';
@@ -21,6 +21,7 @@ interface SettingsModalProps {
   state: AppState;
   onUpdateSettings: (newSettings: Partial<AppState['settings']>) => void;
   onUpdateSecurity: (newSecurity: SecurityConfig) => void;
+  onImportFullState: (newState: AppState) => void;
   onResetAllData: () => void;
   onOpenBackupCenter?: () => void;
   language: 'ar' | 'en';
