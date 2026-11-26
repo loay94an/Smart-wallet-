@@ -205,24 +205,40 @@ class IndexedDBStorage {
     return this.saveQueue;
   }
 
-  // Get storage usage estimate
+  // Ask the browser/WebView to protect wallet storage from automatic eviction.
+  // This does not create disk space or override the platform's quota.
+  async requestPersistentStorage(): Promise<boolean> {
+    if (!navigator.storage?.persist) return false;
+    try {
+      return await navigator.storage.persist();
+    } catch (error) {
+      console.warn('Persistent storage request was not granted:', error);
+      return false;
+    }
+  }
+
+  // Get the browser-managed storage estimate and persistence status.
   async getStorageInfo(): Promise<{ usedBytes: number; quotaBytes: number; isPersisted: boolean }> {
     let usedBytes = 0;
     let quotaBytes = 0;
     let isPersisted = false;
 
-    if (navigator.storage && navigator.storage.estimate) {
+    if (navigator.storage?.estimate) {
       try {
         const estimate = await navigator.storage.estimate();
-        usedBytes = estimate.usage || 0;
-        quotaBytes = estimate.quota || 0;
-      } catch (e) {}
+        usedBytes = estimate.usage ?? 0;
+        quotaBytes = estimate.quota ?? 0;
+      } catch (error) {
+        console.warn('Could not estimate local storage usage:', error);
+      }
     }
 
-    if (navigator.storage && navigator.storage.persisted) {
+    if (navigator.storage?.persisted) {
       try {
         isPersisted = await navigator.storage.persisted();
-      } catch (e) {}
+      } catch (error) {
+        console.warn('Could not read persistent storage status:', error);
+      }
     }
 
     return { usedBytes, quotaBytes, isPersisted };
