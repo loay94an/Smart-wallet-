@@ -62,6 +62,13 @@ jobs:
           python scripts/generate-android-icons.py
       - name: Build debug APK
         run: cd android && ./gradlew assembleDebug --stacktrace
+      - name: Verify launcher icon is packaged in APK
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          "$AAPT" dump badging "$APK" | tee /tmp/smart-wallet-apk-badging.txt
+          grep -Eq "^application:.*icon=|^application-icon(-[0-9]+)?: " /tmp/smart-wallet-apk-badging.txt
+          grep -q "ic_launcher" /tmp/smart-wallet-apk-badging.txt
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

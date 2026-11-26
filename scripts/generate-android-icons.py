@@ -18,8 +18,11 @@ if not MANIFEST.is_file():
 
 png = cairosvg.svg2png(url=str(SOURCE), output_width=512, output_height=512)
 image = Image.open(io.BytesIO(png)).convert("RGBA")
+if image.size != (512, 512) or image.getbbox() is None:
+    raise SystemExit("Launcher icon source rendered as an empty or invalid image")
 
-# Legacy launcher resources for older Android versions and launchers.
+# Legacy launcher resources: these remain the fallback for OEM launchers
+# that do not correctly resolve adaptive icons.
 for density, size in {
     "mdpi": 48,
     "hdpi": 72,
@@ -32,8 +35,9 @@ for density, size in {
     for name in ("ic_launcher.png", "ic_launcher_round.png"):
         image.resize((size, size), Image.Resampling.LANCZOS).save(folder / name)
 
-# Adaptive launcher icon resources for Android 8.0+.
-drawable = RES / "drawable"
+# Adaptive icon foregrounds belong in drawable-nodpi so Android does not
+# density-scale the 432px artwork a second time on high-density devices.
+drawable = RES / "drawable-nodpi"
 drawable.mkdir(parents=True, exist_ok=True)
 image.resize((432, 432), Image.Resampling.LANCZOS).save(
     drawable / "ic_launcher_foreground.png"
@@ -41,15 +45,15 @@ image.resize((432, 432), Image.Resampling.LANCZOS).save(
 
 adaptive = RES / "mipmap-anydpi-v26"
 adaptive.mkdir(parents=True, exist_ok=True)
+adaptive_xml = (
+    '<?xml version="1.0" encoding="utf-8"?>\n'
+    '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+    '  <background android:drawable="@color/ic_launcher_background"/>\n'
+    '  <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n'
+    '</adaptive-icon>\n'
+)
 for name in ("ic_launcher", "ic_launcher_round"):
-    (adaptive / f"{name}.xml").write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-        '  <background android:drawable="@color/ic_launcher_background"/>\n'
-        '  <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n'
-        '</adaptive-icon>\n',
-        encoding="utf-8",
-    )
+    (adaptive / f"{name}.xml").write_text(adaptive_xml, encoding="utf-8")
 
 values = RES / "values"
 values.mkdir(parents=True, exist_ok=True)
@@ -59,7 +63,7 @@ values.mkdir(parents=True, exist_ok=True)
     encoding="utf-8",
 )
 
-# Explicitly point the installed Android application at the generated resources.
+# Explicitly wire both launcher attributes in the generated Capacitor manifest.
 manifest = MANIFEST.read_text(encoding="utf-8")
 match = re.search(r"<application\b[^>]*>", manifest, flags=re.DOTALL)
 if not match:
@@ -80,7 +84,6 @@ for attribute, value in (
 manifest = manifest[:match.start()] + application_tag + manifest[match.end():]
 MANIFEST.write_text(manifest, encoding="utf-8")
 
-# Fail the build if any launcher resource or manifest reference is missing.
 required = [
     RES / f"mipmap-{density}" / filename
     for density in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
@@ -101,6 +104,6 @@ if 'android:roundIcon="@mipmap/ic_launcher_round"' not in application_tag:
     raise SystemExit("Android manifest does not reference the generated round launcher icon")
 
 print(
-    "Verified custom Android launcher icon: legacy densities, adaptive icons, "
-    "and AndroidManifest.xml icon/roundIcon references."
+    "Verified launcher icon source, legacy density PNGs, adaptive icon resources, "
+    "nodpi foreground, and AndroidManifest.xml icon/roundIcon references."
 )
