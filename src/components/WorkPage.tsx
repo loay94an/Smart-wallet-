@@ -199,11 +199,11 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const getTimerFor = (workId: string): WorkTimer =>
     workTimers[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
 
-  const currentTimer = activeWork ? getTimerFor(activeWork.id) : { seconds: 0, isRunning: false, pieces: 0, startTime: null };
+  const currentTimer = activeWork ? getTimerFor(activeWork.id) : { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
 
   const startTimer = (workId: string) => {
     setWorkTimers((prev) => {
-      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null };
+      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
       return {
         ...prev,
         [workId]: {
@@ -235,7 +235,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const addPieces = (workId: string, amount: number) => {
     if (isNaN(amount) || amount <= 0) return;
     setWorkTimers((prev) => {
-      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null };
+      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
       return {
         ...prev,
         [workId]: {
@@ -261,7 +261,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       isDanger: true,
       onConfirm: () => {
         setWorkTimers((prev) => {
-          const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null };
+          const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
           return {
             ...prev,
             [workId]: {
