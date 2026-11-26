@@ -131,14 +131,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleExportBackup = () => {
+  const handleExportBackup = async () => {
     try {
-      sharingService.downloadJSONBackup({
+      await sharingService.downloadJSONBackup({
         ...state,
         settings: { ...state.settings, syncKey: '', autoCloudSync: false },
         security: { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pattern: [] },
       });
-      showStatus(isRTL ? '✅ تم تحميل ملف النسخة الاحتياطية بنجاح' : '✅ Backup downloaded successfully');
+      showStatus(isRTL ? '✅ تم تجهيز ملف JSON للمشاركة أو الحفظ' : '✅ JSON backup is ready to save or share');
     } catch (e: any) {
       showStatus(isRTL ? 'فشل التصدير: ' + e.message : 'Export failed: ' + e.message, true);
     }
