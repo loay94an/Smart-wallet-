@@ -1,4 +1,7 @@
 import { AppState } from '../types';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 function createPortableBackup(state: AppState): AppState {
   return {
@@ -131,20 +134,40 @@ ${jsonString}`;
   }
 
   // Download JSON backup file
-  downloadJSONBackup(state: AppState): void {
+  async downloadJSONBackup(state: AppState): Promise<void> {
     const dateStr = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify(createPortableBackup(state), null, 2)], { type: 'application/json' });
+    const fileName = `wallet-backup-${dateStr}.json`;
+    const json = JSON.stringify(createPortableBackup(state), null, 2);
+
+    // Android WebView does not consistently honor browser Blob downloads.
+    // Write the backup to the app cache and hand the real file to Android's share sheet.
+    if (Capacitor.isNativePlatform()) {
+      const saved = await Filesystem.writeFile({
+        path: fileName,
+        data: json,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8,
+        recursive: true,
+      });
+      await Share.share({
+        title: 'نسخة احتياطية - المحفظة المالية الذكية',
+        text: 'ملف النسخة الاحتياطية بصيغة JSON',
+        files: [saved.uri],
+        dialogTitle: 'حفظ أو مشاركة نسخة JSON',
+      });
+      return;
+    }
+
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `wallet-backup-${dateStr}.json`;
+    link.download = fileName;
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1000);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
   // Create a File object for native sharing
