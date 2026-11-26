@@ -657,7 +657,7 @@ export default function App() {
 
         {activeTab === 'more' && (
           <MoreHub
-            onOpenWork={() => setActiveTab('work')}
+            onOpenBudget={() => setActiveTab('info')}
             onOpenTools={() => setActiveTab('tools')}
             language={lang}
           />
