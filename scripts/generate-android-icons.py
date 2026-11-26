@@ -29,7 +29,7 @@ for name in ("ic_launcher", "ic_launcher_round"):
         '</adaptive-icon>\n', encoding="utf-8")
 values = RES / "values"
 values.mkdir(parents=True, exist_ok=True)
-(values / "ic_launcher_colors.xml").write_text(
+(values / "ic_launcher_background.xml").write_text(
     '<?xml version="1.0" encoding="utf-8"?>\n'
     '<resources><color name="ic_launcher_background">#07132F</color></resources>\n',
     encoding="utf-8")
