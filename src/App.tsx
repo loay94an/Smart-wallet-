@@ -110,12 +110,12 @@ export default function App() {
     const paletteAliases: Record<string, string> = { purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' };
     const requestedPalette = state.settings?.theme || 'mono';
     const palette = paletteAliases[requestedPalette] || requestedPalette;
-    const allowedPalettes = ['mono', 'ocean', 'emerald', 'violet', 'amber', 'rose'];
+    const allowedPalettes = ['navy-emerald', 'mono', 'ocean', 'emerald', 'violet', 'amber', 'rose'];
     root.dataset.themePalette = allowedPalettes.includes(palette) ? palette : 'mono';
     const isDark = state.settings?.appearance === 'dark';
     root.dataset.themeMode = isDark ? 'dark' : 'light';
     if (Capacitor.isNativePlatform()) {
-      StatusBar.setBackgroundColor({ color: isDark ? '#101216' : '#f5f5f5' }).catch(() => undefined);
+      StatusBar.setBackgroundColor({ color: isDark ? '#0B1120' : '#F8FAFC' }).catch(() => undefined);
       StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => undefined);
     }
   }, [state.settings?.language, state.settings?.theme, state.settings?.appearance]);
