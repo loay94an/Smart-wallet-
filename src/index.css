@@ -241,3 +241,31 @@ input::placeholder, textarea::placeholder { color: var(--text-muted) !important;
   .app-shell main { padding-inline: .75rem; }
   .app-shell .wallet-balance-card { padding: 1rem !important; border-radius: 1.25rem !important; }
 }
+
+/* Clear tactile feedback for every interactive button, including touch devices. */
+.app-shell button {
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .12s ease;
+}
+.app-shell button:not(:disabled):active {
+  background-color: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1.5px var(--accent), 0 2px 8px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  transform: scale(.97);
+}
+/* Persistent selected state for toggles, tabs, and current navigation items. */
+.app-shell button[aria-pressed="true"],
+.app-shell button[aria-selected="true"],
+.app-shell button[aria-current="page"],
+.app-shell button[aria-current="step"],
+.app-shell button[data-state="active"] {
+  background-color: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.app-shell button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
