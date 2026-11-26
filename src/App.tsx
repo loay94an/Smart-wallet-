@@ -51,6 +51,7 @@ export default function App() {
   const [hasLoadedState, setHasLoadedState] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [openAddTransactionOnWallet, setOpenAddTransactionOnWallet] = useState(false);
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Modals
@@ -594,7 +595,7 @@ export default function App() {
           <Dashboard
             state={state}
             onNavigate={(tab) => setActiveTab(tab)}
-            onOpenAddTransaction={() => setActiveTab('wallet')}
+            onOpenAddTransaction={() => { setOpenAddTransactionOnWallet(true); setActiveTab('wallet'); }}
             onOpenAddPerson={() => setActiveTab('people')}
             onOpenAddWork={() => setActiveTab('work')}
             language={lang}
@@ -604,6 +605,7 @@ export default function App() {
         {activeTab === 'wallet' && (
           <WalletPage
             state={state}
+            openAddTransactionOnMount={openAddTransactionOnWallet}
             onSaveTransaction={handleSaveTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onAddCategory={handleAddCategory}
@@ -676,7 +678,7 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <BottomNav
         activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
+        onTabChange={(tab) => { setOpenAddTransactionOnWallet(false); setActiveTab(tab); }}
         language={lang}
       />
 
