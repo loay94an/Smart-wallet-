@@ -29,6 +29,7 @@ interface BackupModalProps {
   onClose: () => void;
   state: AppState;
   onApplyBackup: (newState: AppState, isMerged: boolean) => void;
+  initialTab?: 'export' | 'import';
   language: 'ar' | 'en';
 }
 
@@ -37,6 +38,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   onClose,
   state,
   onApplyBackup,
+  initialTab = 'export',
   language,
 }) => {
   const isRTL = language === 'ar';
@@ -62,7 +64,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  useEffect(() => { if (isOpen) { setActiveTab('export'); setIsConfirming(false); setInspection(null); setParseError(null); setPastedText(''); setFileName(null); setToastMessage(null); setShowRawJSON(false); } }, [isOpen]);
+  useEffect(() => { if (isOpen) { setActiveTab(initialTab); setIsConfirming(false); setInspection(null); setParseError(null); setPastedText(''); setFileName(null); setToastMessage(null); setShowRawJSON(false); } }, [isOpen]);
 
   if (!isOpen) return null;
 
