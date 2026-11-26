@@ -59,6 +59,7 @@ export default function App() {
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+  const [backupInitialTab, setBackupInitialTab] = useState<'export' | 'import'>('export');
 
   // Load from IndexedDB on startup
   useEffect(() => {
@@ -568,31 +569,11 @@ export default function App() {
         onOpenSync={() => setIsSyncModalOpen(true)}
         onOpenShare={() => setIsShareModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
-        onOpenBackup={() => setIsBackupModalOpen(true)}
+        onOpenBackup={() => { setBackupInitialTab('export'); setIsBackupModalOpen(true); }}
+        onOpenImport={() => { setBackupInitialTab('import'); setIsBackupModalOpen(true); }}
         onOpenTools={() => setActiveTab('tools')}
         onExportExcel={() => exportService.exportFullWorkbookToExcel(state, lang === 'ar')}
-        onExportPDF={() => {
-          const cur = state.settings.currency || 'ر.س';
-          const items = state.transactions.slice(0, 20).map((t) => ({
-            title: t.desc || t.category,
-            subtitle: new Date(t.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'),
-            amount: (t.type === 'income' ? '+' : '-') + formatCurrency(t.amount, cur),
-          }));
-          const totalInc = state.transactions.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-          const totalExp = state.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-
-          exportService.exportSectionReportPDF(
-            lang === 'ar' ? 'تقرير المحفظة المالية العام' : 'Complete Wallet Financial Report',
-            state,
-            items,
-            [
-              { label: lang === 'ar' ? 'إجمالي الدخل' : 'Total Income', value: formatCurrency(totalInc, cur) },
-              { label: lang === 'ar' ? 'إجمالي المصروفات' : 'Total Expense', value: formatCurrency(totalExp, cur) },
-              { label: lang === 'ar' ? 'الرصيد الصافي' : 'Net Balance', value: formatCurrency(totalInc - totalExp, cur) },
-            ],
-            lang === 'ar'
-          );
-        }}
+        onExportPDF={() => exportService.exportFullReportToPDF(state, lang === 'ar')}
         onLockApp={() => setIsLocked(true)}
         isSecurityEnabled={Boolean(state.security?.enabled && state.security.type !== 'off')}
         isIndexedDB={dbService.isIndexedDBSupported}
@@ -728,6 +709,7 @@ export default function App() {
         onClose={() => setIsBackupModalOpen(false)}
         state={state}
         onApplyBackup={handleApplyBackup}
+        initialTab={backupInitialTab}
         language={lang}
       />
 
