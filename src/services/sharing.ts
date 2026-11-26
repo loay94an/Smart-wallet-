@@ -4,8 +4,18 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 
 function createPortableBackup(state: AppState): AppState {
+  let workTimers = state.workTimers || {};
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('smart_work_timers_state');
+      if (stored) workTimers = JSON.parse(stored);
+    }
+  } catch (error) {
+    console.warn('Could not read work timers for backup:', error);
+  }
   return {
     ...state,
+    workTimers,
     settings: { ...state.settings, syncKey: '', autoCloudSync: false },
     security: { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pinLength: 4, pattern: [] },
   };
