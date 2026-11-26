@@ -614,12 +614,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             {isRTL ? 'حساب بالساعة أو بالقطعة، مؤقت ذكي، وسجل الدفعات' : 'Hourly/piece rates, timer and salary logs'}
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
-            <span className="text-[10px] text-[var(--text-secondary)]">{isRTL ? 'الصافي المتبقي لجميع الأعمال' : 'Net outstanding across all work'}</span>
-            <strong className={`text-sm font-black ${allWorksNetDueRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {formatCurrency(allWorksNetDueRemaining, cur)}
-            </strong>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -789,6 +783,30 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         </div>
       )}
 
+      {/* Selected work outstanding balance — shown directly after work selection */}
+      {activeWork && (
+        <div className="rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 p-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-purple-300 block">
+                {isRTL ? '💰 الصافي المتبقي للعمل المحدد' : 'Selected Work Net Remaining'}
+              </span>
+              <div className="text-2xl font-black text-emerald-400 mt-0.5">
+                {formatCurrency(netDueRemaining, cur)}
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-purple-300 block">
+                {isPiece ? (isRTL ? 'القطع المتبقية' : 'Pieces Left') : (isRTL ? 'الساعات المتبقية' : 'Hours Left')}
+              </span>
+              <div className="text-base font-extrabold text-white">
+                {Math.max(0, remainingWorkUnits).toFixed(1)} {unitLabel}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Active Work Panel */}
       {activeWork ? (
         <div className="space-y-5" ref={reportRef}>
@@ -803,7 +821,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-purple-400" />
                     <span className="text-xs font-black text-white">
-                      {isRTL ? 'المؤقت الذكي وجلسات الإنجاز (مستقل لكل مشروع)' : 'Smart Timer & Session (Independent)'}
+                      {isRTL ? 'مؤقت عمل' : 'Work Timer'}
                     </span>
                   </div>
                   <span className="rounded-full bg-purple-900/40 px-2 py-0.5 text-[10px] font-bold text-purple-300 border border-purple-700/30">
@@ -1109,28 +1127,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Simplified Net Summary Card */}
-          <div className="rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block">
-                  {isRTL ? '💰 الصافي المتبقي من المستحقات' : 'Net Remaining Balance'}
-                </span>
-                <div className="text-2xl font-black text-emerald-400 mt-0.5">
-                  {formatCurrency(netDueRemaining, cur)}
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold text-purple-300 block">
-                  {isPiece ? (isRTL ? 'القطع المتبقية' : 'Pieces Left') : (isRTL ? 'الساعات المتبقية' : 'Hours Left')}
-                </span>
-                <div className="text-base font-extrabold text-white">
-                  {Math.max(0, remainingWorkUnits).toFixed(1)} {unitLabel}
-                </div>
-              </div>
             </div>
           </div>
 
