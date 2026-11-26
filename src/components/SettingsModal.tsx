@@ -14,6 +14,8 @@ import {
   Check,
   Sparkles,
   Mail,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -28,8 +30,16 @@ interface SettingsModalProps {
   language: 'ar' | 'en';
 }
 
+const normalizeTheme = (value?: string): string => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' } as Record<string, string>)[value || ''] || value || 'mono';
+
 const THEME_OPTIONS = [
-  { id: 'purple', nameAr: '⚪ أبيض ورمادي وأسود', color: '#27272a' },
+  { id: 'navy-emerald', nameAr: 'كحلي وزمردي', nameEn: 'Navy & Emerald', color: '#0F172A', secondary: '#10B981' },
+  { id: 'mono', nameAr: 'أحادي', nameEn: 'Monochrome', color: '#27272a', secondary: '#a1a1aa' },
+  { id: 'ocean', nameAr: 'أزرق محيطي', nameEn: 'Ocean Blue', color: '#087eaa', secondary: '#38bdf8' },
+  { id: 'emerald', nameAr: 'أخضر زمردي', nameEn: 'Emerald', color: '#07845b', secondary: '#34d399' },
+  { id: 'violet', nameAr: 'بنفسجي', nameEn: 'Violet', color: '#7651c8', secondary: '#a78bfa' },
+  { id: 'amber', nameAr: 'كهرماني', nameEn: 'Amber', color: '#b7791f', secondary: '#fbbf24' },
+  { id: 'rose', nameAr: 'وردي', nameEn: 'Rose', color: '#c04470', secondary: '#fb7185' },
 ];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -46,7 +56,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   // All hooks called unconditionally at top level
 
-  const [activeTheme, setActiveTheme] = useState<string>('purple');
+  const [activeTheme, setActiveTheme] = useState<string>(normalizeTheme(state.settings?.theme));
+  const [appearance, setAppearance] = useState<'light' | 'dark'>(state.settings?.appearance || 'light');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
   const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
   const [userEmail, setUserEmail] = useState<string>(savedEmail);
@@ -60,7 +71,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTheme('purple');
+      setActiveTheme(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'navy-emerald'));
+      setAppearance(state.settings?.appearance || 'light');
       setCurrency(state.settings?.currency || 'ر.س');
       setUserEmail(state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || ''));
       setSecurityType(state.security?.type || 'off');
@@ -85,6 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     try {
       onUpdateSettings({
       theme: activeTheme,
+      appearance,
       currency: currency.trim() || 'ر.س',
       userEmail: userEmail.trim(),
     });
@@ -155,28 +168,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         )}
 
-        {/* 1. Theme Selector */}
-        <div className="space-y-2 rounded-2xl border border-purple-900/40 bg-[#171736] p-4">
+        {/* 1. Color palette and appearance */}
+        <div className="space-y-3 rounded-2xl border border-purple-900/40 bg-[#171736] p-4">
           <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
             <Palette className="h-4 w-4 text-purple-400" />
-            <span>{isRTL ? 'مظهر التطبيق (Theme)' : 'Theme'}</span>
+            <span>{isRTL ? 'ألوان التطبيق' : 'Color palette'}</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {THEME_OPTIONS.map((th) => (
               <button
                 key={th.id}
                 type="button"
+                aria-pressed={activeTheme === th.id}
                 onClick={() => setActiveTheme(th.id)}
                 className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition-all border ${
                   activeTheme === th.id
-                    ? 'border-purple-400 bg-purple-900/40 text-white shadow-md'
+                    ? 'border-purple-400 bg-purple-900/20 text-white shadow-md ring-1 ring-purple-400/30'
                     : 'border-purple-900/30 bg-[#121226] text-purple-300 hover:border-purple-700'
                 }`}
               >
-                <span className="h-4 w-4 rounded-full" style={{ backgroundColor: th.color }} />
-                <span className="text-[11px]">{th.nameAr}</span>
+                <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full border border-black/10">
+                  <span className="h-full w-1/2" style={{ backgroundColor: th.color }} />
+                  <span className="h-full w-1/2" style={{ backgroundColor: th.secondary }} />
+                </span>
+                <span className="text-[11px]">{isRTL ? th.nameAr : th.nameEn}</span>
+                {activeTheme === th.id && <Check className="ms-auto h-3.5 w-3.5" />}
               </button>
             ))}
+          </div>
+          <div className="border-t border-purple-900/30 pt-3 space-y-2">
+            <label className="text-xs font-bold text-purple-200">{isRTL ? 'نمط العرض' : 'Appearance'}</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setAppearance('light')} aria-pressed={appearance === 'light'} className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-bold ${appearance === 'light' ? 'border-purple-400 bg-purple-900/30 text-white' : 'border-purple-900/30 bg-[#121226] text-purple-300'}`}>
+                <Sun className="h-4 w-4" /> {isRTL ? 'نهاري' : 'Light'}
+              </button>
+              <button type="button" onClick={() => setAppearance('dark')} aria-pressed={appearance === 'dark'} className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-bold ${appearance === 'dark' ? 'border-purple-400 bg-purple-900/30 text-white' : 'border-purple-900/30 bg-[#121226] text-purple-300'}`}>
+                <Moon className="h-4 w-4" /> {isRTL ? 'ليلي' : 'Dark'}
+              </button>
+            </div>
           </div>
         </div>
 

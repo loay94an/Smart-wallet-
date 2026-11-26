@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import {
   AppState,
   Transaction,
@@ -98,25 +100,25 @@ export default function App() {
     }
   }, [state, isLoaded, hasLoadedState]);
 
-  // Apply theme and direction
+  // Apply the selected color palette and light/dark appearance.
   useEffect(() => {
+    const root = document.documentElement;
     const lang = state.settings?.language || 'ar';
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    root.lang = lang;
+    root.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-    const themeColors: Record<string, string> = {
-      purple: '#7c3aed',
-      blue: '#2563eb',
-      green: '#059669',
-      red: '#dc2626',
-      orange: '#ea580c',
-      pink: '#db2777',
-    };
-
-    const theme = state.settings?.theme || 'purple';
-    const primary = themeColors[theme] || '#7c3aed';
-    document.documentElement.style.setProperty('--primary-theme', primary);
-  }, [state.settings?.language, state.settings?.theme]);
+    const paletteAliases: Record<string, string> = { purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' };
+    const requestedPalette = state.settings?.theme || 'mono';
+    const palette = paletteAliases[requestedPalette] || requestedPalette;
+    const allowedPalettes = ['navy-emerald', 'mono', 'ocean', 'emerald', 'violet', 'amber', 'rose'];
+    root.dataset.themePalette = allowedPalettes.includes(palette) ? palette : 'mono';
+    const isDark = state.settings?.appearance === 'dark';
+    root.dataset.themeMode = isDark ? 'dark' : 'light';
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setBackgroundColor({ color: isDark ? '#0B1120' : '#F8FAFC' }).catch(() => undefined);
+      StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => undefined);
+    }
+  }, [state.settings?.language, state.settings?.theme, state.settings?.appearance]);
 
   // Auto Cloud Sync if enabled
   useEffect(() => {

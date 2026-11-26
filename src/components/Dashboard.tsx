@@ -128,7 +128,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-6 pb-20 pt-2">
       {/* Overview Header banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/60 via-[#181133] to-[#121226] p-6 shadow-xl">
+      <div className="wallet-balance-card relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/60 via-[#181133] to-[#121226] p-6 shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-purple-300 text-xs font-semibold mb-1">

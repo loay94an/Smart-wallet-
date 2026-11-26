@@ -160,6 +160,7 @@ export interface SettingsConfig {
   currency: string;
   language: 'ar' | 'en';
   theme: string;
+  appearance?: 'light' | 'dark';
   autoCloudSync: boolean;
   syncKey: string;
   syncServerUrl?: string;
