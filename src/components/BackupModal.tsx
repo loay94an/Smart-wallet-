@@ -45,7 +45,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   
   // Export states
   const [recipientEmail, setRecipientEmail] = useState<string>(
-    state.settings?.userEmail || 'loay94an@gmail.com'
+    state.settings?.userEmail || ''
   );
   const [whatsappPhone, setWhatsappPhone] = useState<string>('');
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
@@ -337,7 +337,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-xs font-black text-purple-200">
                     <Mail className="h-4 w-4 text-purple-400" />
-                    <span>{isRTL ? 'إرسال النسخة الاحتياطية إلى البريد الإلكتروني' : 'Dispatch Backup to Email'}</span>
+                    <span>{isRTL ? 'مشاركة النسخة عبر البريد الإلكتروني' : 'Share Backup by Email'}</span>
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -345,7 +345,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                     type="email"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
-                    placeholder="example@mail.com"
+                    placeholder={isRTL ? "البريد الإلكتروني (اختياري)" : "Email address (optional)"}
                     className="flex-1 rounded-xl border border-purple-800/50 bg-[#0f0f24] px-3 py-2 text-xs text-white placeholder-purple-400/40 outline-none focus:border-purple-400"
                   />
                   <button
