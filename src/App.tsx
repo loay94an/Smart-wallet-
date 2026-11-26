@@ -144,14 +144,24 @@ export default function App() {
     }
   }, [state.settings?.language, state.settings?.theme, state.settings?.appearance]);
 
-  // Auto Cloud Sync if enabled
+  // Auto-sync is deliberately debounced: encrypting the full wallet uses PBKDF2
+  // and must not run repeatedly while the user is actively editing records.
   useEffect(() => {
-    if (isLoaded && state.settings?.autoCloudSync && state.settings.syncKey) {
-      const timer = setTimeout(() => {
-        cloudSyncService.pushToCloud(state.settings.syncKey, state, undefined, state.settings.syncServerUrl);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!isLoaded || !state.settings?.autoCloudSync || !state.settings.syncKey) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled || document.visibilityState === 'hidden') return;
+      cloudSyncService.pushToCloud(
+        state.settings.syncKey,
+        state,
+        undefined,
+        state.settings.syncServerUrl
+      ).catch((error) => console.warn('Auto cloud sync failed:', error));
+    }, 30000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [state, isLoaded]);
 
   // State Mutators
@@ -518,7 +528,7 @@ export default function App() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a1a] text-purple-400">
+      <div className="app-shell flex min-h-screen items-center justify-center text-[var(--accent)]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-500 border-t-transparent" />
           <span className="text-sm font-bold">جاري تشغيل قاعدة البيانات IndexedDB...</span>
@@ -529,8 +539,8 @@ export default function App() {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a] p-6 text-center text-white" dir="rtl">
-        <div className="max-w-lg rounded-2xl border border-red-500/40 bg-[#171736] p-6">
+      <div className="app-shell min-h-screen flex items-center justify-center p-6 text-center text-[var(--text-primary)]" dir="rtl">
+        <div className="max-w-lg rounded-2xl border border-red-500/30 bg-[var(--surface)] p-6 shadow-xl">
           <h1 className="text-lg font-black text-red-300">تعذر فتح بيانات المحفظة</h1>
           <p className="mt-3 text-sm leading-7 text-purple-100">{loadError}</p>
           <p className="mt-3 text-xs leading-6 text-purple-300">لم يتم حفظ بيانات فارغة فوق البيانات السابقة. لا تمسح بيانات المتصفح. احتفظ بملف قاعدة البيانات وجرّب استعادة نسخة احتياطية بعد معالجة سبب الخطأ.</p>
@@ -543,7 +553,7 @@ export default function App() {
   const lang = state.settings?.language || 'ar';
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] text-[#e8e8ff] flex flex-col selection:bg-purple-600 selection:text-white">
+    <div className="app-shell min-h-screen flex flex-col selection:bg-[var(--accent)] selection:text-white">
       {/* Lock screen overlay if enabled and locked */}
       {isLocked && state.security.enabled && (
         <LockScreen
