@@ -668,7 +668,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   }, 0);
 
   return (
-    <div className="space-y-5 pb-20 pt-2">
+    <div className="work-page space-y-5 pb-20 pt-2">
       {/* Combined net outstanding for all works — positioned above New Project */}
       {state.works.length > 0 && (
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 to-teal-950/30 px-4 py-3 shadow-lg">
