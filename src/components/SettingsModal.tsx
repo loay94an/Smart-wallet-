@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AppState, SecurityConfig } from '../types';
-import { dbService } from '../services/db';
 import { createPinCredential } from '../services/security';
 import {
   Settings,
@@ -9,11 +8,8 @@ import {
   DollarSign,
   Shield,
   Trash2,
-  Database,
   X,
   Check,
-  Sparkles,
-  Mail,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -24,9 +20,6 @@ interface SettingsModalProps {
   state: AppState;
   onUpdateSettings: (newSettings: Partial<AppState['settings']>) => void;
   onUpdateSecurity: (newSecurity: SecurityConfig) => void;
-  onImportFullState: (newState: AppState) => void;
-  onResetAllData: () => void;
-  onOpenBackupCenter?: () => void;
   language: 'ar' | 'en';
 }
 
@@ -48,8 +41,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   state,
   onUpdateSettings,
   onUpdateSecurity,
-  onResetAllData,
-  onOpenBackupCenter,
   language,
 }) => {
   const isRTL = language === 'ar';
@@ -59,10 +50,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeTheme, setActiveTheme] = useState<string>(normalizeTheme(state.settings?.theme));
   const [appearance, setAppearance] = useState<'light' | 'dark'>(state.settings?.appearance || 'light');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
-  const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
-  const [userEmail, setUserEmail] = useState<string>(savedEmail);
-  const [storageInfo, setStorageInfo] = useState<{ usedBytes: number; quotaBytes: number; isPersisted: boolean } | null>(null);
-  const [requestingStorage, setRequestingStorage] = useState(false);
 
   const [securityType, setSecurityType] = useState<'off' | 'pin' | 'pattern'>(state.security?.type || 'off');
   const [newPin, setNewPin] = useState<string>(state.security?.pin || '');
@@ -75,15 +62,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setActiveTheme(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'navy-emerald'));
       setAppearance(state.settings?.appearance || 'light');
       setCurrency(state.settings?.currency || 'ر.س');
-      setUserEmail(state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || ''));
       setSecurityType(state.security?.type || 'off');
       setNewPin(state.security?.pin || '');
       setConfirmingReset(false);
       setStatusMsg(null);
 
-      dbService.getStorageInfo().then((info) => {
-        setStorageInfo(info);
-      });
     }
   }, [isOpen, state]);
 
@@ -100,7 +83,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       theme: activeTheme,
       appearance,
       currency: currency.trim() || 'ر.س',
-      userEmail: userEmail.trim(),
     });
 
     if (securityType === 'pin') {
@@ -137,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-purple-500/30 bg-[#14142d] p-6 shadow-2xl space-y-5">
+      <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-4 shadow-2xl space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-purple-900/40 pb-3">
           <div className="flex items-center gap-2.5">
@@ -147,7 +129,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div>
               <h3 className="text-base font-black text-white">{isRTL ? 'إعدادات التطبيق' : 'Settings'}</h3>
               <p className="text-[11px] text-purple-300/70">
-                {isRTL ? 'المظهر، العملة، الأمان، والتخزين' : 'Theme, currency, security & storage'}
+                {isRTL ? 'الألوان، اللغة، العملة، وقفل التطبيق' : 'Colors, language, currency & app lock'}
               </p>
             </div>
           </div>
@@ -242,22 +224,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 3. Default Backup Email */}
-        <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 space-y-1.5">
-          <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-            <Mail className="h-4 w-4 text-purple-400" />
-            <span>{isRTL ? 'بريدك الإلكتروني للنسخ الاحتياطي' : 'Backup Email'}</span>
-          </label>
-          <input
-            type="email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-            placeholder={isRTL ? "أدخل بريدك الإلكتروني (اختياري)" : "Enter your email (optional)"}
-            className="w-full rounded-xl border border-purple-900/50 bg-[#101026] p-2 text-xs font-bold text-white outline-none"
-          />
-        </div>
-
-        {/* 4. Security Lock Settings */}
+        {/* App lock */}
         <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 space-y-3">
           <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
             <Shield className="h-4 w-4 text-purple-400" />
@@ -300,75 +267,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
           )}
-        </div>
-
-        {/* 5. Storage Info */}
-        <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 text-xs space-y-2">
-          <div className="flex items-center justify-between text-purple-200 font-bold">
-            <span className="flex items-center gap-1.5">
-              <Database className="h-4 w-4 text-emerald-400" />
-              <span>{isRTL ? 'التخزين المحلي الموسّع' : 'Expanded local storage'}</span>
-            </span>
-            <span className="text-emerald-400">IndexedDB ✓</span>
-          </div>
-          {storageInfo && (
-            <>
-              <div className="flex justify-between text-[11px] text-purple-300/80">
-                <span>{isRTL ? 'المستخدم' : 'Used'}</span>
-                <span>{(storageInfo.usedBytes / (1024 * 1024)).toFixed(2)} MB</span>
-              </div>
-              <div className="flex justify-between text-[11px] text-purple-300/80">
-                <span>{isRTL ? 'الحصة المتاحة من النظام' : 'Browser quota'}</span>
-                <span>{storageInfo.quotaBytes > 0 ? (storageInfo.quotaBytes / (1024 * 1024)).toFixed(1) + ' MB' : (isRTL ? 'غير متاحة' : 'Unavailable')}</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#0c0c20]">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${storageInfo.quotaBytes > 0 ? Math.min(100, (storageInfo.usedBytes / storageInfo.quotaBytes) * 100) : 0}%` }} />
-              </div>
-              <p className="text-[10px] text-purple-300/70">
-                {storageInfo.isPersisted
-                  ? (isRTL ? 'التخزين الدائم مفعّل؛ تقل احتمالية حذف البيانات تلقائياً.' : 'Persistent storage is enabled; automatic eviction is less likely.')
-                  : (isRTL ? 'يمكن طلب حماية البيانات من الحذف التلقائي. السعة الفعلية يحددها Android والمساحة الحرة.' : 'You can request protection from automatic eviction. Actual capacity is controlled by Android and free disk space.')}
-              </p>
-              {!storageInfo.isPersisted && (
-                <button type="button" disabled={requestingStorage} onClick={async () => {
-                  setRequestingStorage(true);
-                  const granted = await dbService.requestPersistentStorage();
-                  const info = await dbService.getStorageInfo();
-                  setStorageInfo(info);
-                  setRequestingStorage(false);
-                  showStatus(granted
-                    ? (isRTL ? 'تم تفعيل حماية التخزين المحلي.' : 'Persistent storage protection enabled.')
-                    : (isRTL ? 'لم يمنح النظام الإذن. سيستمر التطبيق باستخدام السعة المتاحة.' : 'The system did not grant the request. The app will continue using available storage.'), !granted);
-                }} className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2.5 font-bold text-emerald-300 disabled:opacity-50">
-                  {requestingStorage
-                    ? (isRTL ? 'جارٍ الطلب...' : 'Requesting...')
-                    : (isRTL ? 'زيادة حماية التخزين المحلي' : 'Increase storage protection')}
-                </button>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* 6. Unified backup, export and sharing entry point */}
-        <div className="rounded-2xl border border-cyan-700/40 bg-gradient-to-br from-[#171736] to-[#102b35] p-4 space-y-3">
-          <div className="flex items-center gap-2 text-purple-200">
-            <Database className="h-4 w-4 text-cyan-400" />
-            <div>
-              <p className="text-xs font-black">{isRTL ? 'التصدير والمشاركة والنسخ الاحتياطي' : 'Export, Share & Backup'}</p>
-              <p className="text-[10px] text-purple-300/70">{isRTL ? 'واجهة موحدة لحفظ البيانات ومشاركتها واستعادتها' : 'One place to export, share and restore your data'}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onOpenBackupCenter?.();
-            }}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-cyan-500/50 bg-cyan-600/20 py-3 text-xs font-black text-cyan-200 hover:bg-cyan-600/35 active:scale-[0.99]"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>{isRTL ? 'فتح مركز التصدير والمشاركة الموحد' : 'Open Unified Export & Share Center'}</span>
-          </button>
         </div>
 
         {/* Save button */}

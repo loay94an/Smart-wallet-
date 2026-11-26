@@ -709,9 +709,6 @@ export default function App() {
         state={state}
         onUpdateSettings={handleUpdateSettings}
         onUpdateSecurity={handleUpdateSecurity}
-        onImportFullState={handleImportFullState}
-        onResetAllData={handleResetAllData}
-        onOpenBackupCenter={() => setIsBackupModalOpen(true)}
         language={lang}
       />
 
