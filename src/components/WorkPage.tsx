@@ -441,6 +441,22 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const totalGrossEarned = totalQuantityOrHours * (activeWork ? Number(activeWork.rate) : 0);
   const totalReceived = activePayments.reduce((s, p) => s + Number(p.amount), 0);
   const netDueRemaining = totalGrossEarned - totalReceived;
+
+  // Aggregate outstanding dues across every work item, not just the selected one.
+  const allWorksGrossEarned = state.workLogs.reduce((total, log) => {
+    const work = state.works.find((item) => item.id === log.workId);
+    if (!work) return total;
+    const units = work.calculationType === 'piece'
+      ? Number(log.quantity || 0)
+      : Number(log.hours || 0);
+    return total + units * Number(work.rate || 0);
+  }, 0);
+  const allWorksPaymentsReceived = state.workPayments.reduce(
+    (total, payment) => total + Number(payment.amount || 0),
+    0
+  );
+  const allWorksNetDueRemaining = allWorksGrossEarned - allWorksPaymentsReceived;
+
   const remainingWorkUnits = activeWork && activeWork.rate > 0 ? netDueRemaining / activeWork.rate : 0;
 
   // Productivity metrics
@@ -598,15 +614,12 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             {isRTL ? 'حساب بالساعة أو بالقطعة، مؤقت ذكي، وسجل الدفعات' : 'Hourly/piece rates, timer and salary logs'}
           </p>
 
-          {activeWork && (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
-              <span className="text-xs font-extrabold text-[var(--text-primary)]">{activeWork.name}</span>
-              <span className="text-[10px] text-[var(--text-secondary)]">{isRTL ? 'الصافي الباقي من المستحقات' : 'Net outstanding'}</span>
-              <strong className={`text-sm font-black ${netDueRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {formatCurrency(netDueRemaining, cur)}
-              </strong>
-            </div>
-          )}
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+            <span className="text-[10px] text-[var(--text-secondary)]">{isRTL ? 'الصافي المتبقي لجميع الأعمال' : 'Net outstanding across all work'}</span>
+            <strong className={`text-sm font-black ${allWorksNetDueRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {formatCurrency(allWorksNetDueRemaining, cur)}
+            </strong>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
