@@ -197,7 +197,7 @@ class IndexedDBStorage {
           transaction.onabort = () => reject(transaction.error || new Error('IndexedDB clear aborted'));
         });
       }
-      for (const key of [LEGACY_STORAGE_KEY, 'currentWorkId', 'timer_state', 'wallet_theme', 'wallet_lang']) {
+      for (const key of [LEGACY_STORAGE_KEY, 'currentWorkId', 'timer_state', 'smart_work_timers_state', 'wallet_theme', 'wallet_lang']) {
         try { localStorage.removeItem(key); } catch (error) { console.warn('Could not clear local storage key:', key, error); }
       }
     };

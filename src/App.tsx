@@ -276,6 +276,16 @@ export default function App() {
     }));
   };
 
+  // Persist work timer checkpoints immediately to IndexedDB, not only after the
+  // general debounced app-state save. This survives Android process termination.
+  const handleSaveWorkTimers = (workTimers: NonNullable<AppState['workTimers']>) => {
+    const nextState = { ...state, workTimers };
+    setState(nextState);
+    dbService.saveState(nextState).catch((err) => {
+      console.error('تعذر حفظ مؤقت العمل:', err);
+    });
+  };
+
   // Work Mutators
   const handleSaveWork = (work: Work) => {
     setState((prev) => {
@@ -630,6 +640,7 @@ export default function App() {
             onDeleteWorkPayment={handleDeleteWorkPayment}
             onSaveWorkGoal={handleSaveWorkGoal}
             onDeleteWorkGoal={handleDeleteWorkGoal}
+            onSaveWorkTimers={handleSaveWorkTimers}
             language={lang}
           />
         )}
