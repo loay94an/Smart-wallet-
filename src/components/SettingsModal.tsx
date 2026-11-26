@@ -13,6 +13,7 @@ import {
   X,
   Check,
   Sparkles,
+  Mail,
 } from 'lucide-react';
 
 interface SettingsModalProps {
