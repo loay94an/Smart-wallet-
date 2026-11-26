@@ -39,7 +39,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - uses: actions/setup-java@v4
         with:
@@ -105,8 +104,14 @@ jobs:
           """
           if "android {" not in s or "buildTypes {" not in s or "release {" not in s:
               raise SystemExit("Generated Gradle file has an unexpected structure.")
-          s = s.replace("android {", "android {\n" + signing, 1)
-          s = s.replace("release {", "release {\n            signingConfig signingConfigs.release", 1)
+          s = s.replace("android {", "android {\\n" + signing, 1)
+          build_types = s.index("buildTypes {")
+          release_type = s.index("release {", build_types)
+          s = s[:release_type] + s[release_type:].replace(
+              "release {",
+              "release {\\n            signingConfig signingConfigs.release",
+              1,
+          )
           p.write_text(s)
           PY
 
