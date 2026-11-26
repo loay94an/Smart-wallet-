@@ -668,7 +668,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   }, 0);
 
   return (
-    <div className="space-y-5 pb-20 pt-2">
+    <div className="work-page space-y-5 pb-20 pt-2">
       {/* Combined net outstanding for all works — positioned above New Project */}
       {state.works.length > 0 && (
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 to-teal-950/30 px-4 py-3 shadow-lg">
@@ -761,7 +761,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
 
       {/* Work Tabs */}
       {state.works.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="work-work-tabs pb-1">
           {orderedWorks.map((w) => {
             const isSelected = w.id === selectedWorkId;
             const wTimerBase = workTimers[w.id];
@@ -798,13 +798,13 @@ export const WorkPage: React.FC<WorkPageProps> = ({
 
       {/* Selected work outstanding balance — shown directly after work selection */}
       {activeWork && (
-        <div className="rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 p-4 shadow-lg">
+        <div className="work-net-card rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold text-purple-300 block">
                 {isRTL ? '💰 الصافي المتبقي للعمل المحدد' : 'Selected Work Net Remaining'}
               </span>
-              <div className="text-2xl font-black text-emerald-400 mt-0.5">
+              <div className="work-net-value font-black text-emerald-400 mt-0.5">
                 {formatCurrency(netDueRemaining, cur)}
               </div>
             </div>
@@ -829,7 +829,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             const pieceLiveEarnings = currentTimer.pieces * Number(activeWork.rate);
 
             return (
-              <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/70 via-[#181135] to-[#121228] p-2.5 shadow-md">
+              <div className="work-timer-card rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/70 via-[#181135] to-[#121228] shadow-md">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-purple-400" />
@@ -843,7 +843,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                 </div>
 
                 <div className="text-center my-1.5">
-                  <div className="font-mono text-2xl sm:text-3xl font-black tracking-widest text-white drop-shadow-md">
+                  <div className="work-timer-display font-mono font-black text-white drop-shadow-md">
                     {formatTimer(currentTimer.seconds)}
                   </div>
                   <div className="mt-1 text-[11px] text-purple-300/70">
@@ -895,7 +895,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                     </div>
 
                     {/* 2. Quick Addition Pills & Reset Button (🔄) */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-900/40">
+                    <div className="work-quick-add flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-900/40">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-bold text-purple-300/70 me-1">
                           {isRTL ? 'إضافة سريعة:' : 'Quick Add:'}
@@ -926,14 +926,14 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                     </div>
 
                     {/* 3. Dual Info Panel (المجموع + الأرباح) */}
-                    <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <div className="work-piece-metrics pt-1">
                       {/* Total Pieces Panel */}
                       <div className="rounded-2xl border border-purple-800/40 bg-[#120f29] p-3 text-center shadow-inner">
                         <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-purple-300">
                           <span>📊</span>
                           <span>{isRTL ? 'المجموع' : 'Total'}</span>
                         </div>
-                        <div className="mt-1 font-mono text-2xl font-black text-white">
+                        <div className="work-metric-value mt-1 font-mono font-black text-white">
                           {currentTimer.pieces}
                         </div>
                         <div className="text-[10px] text-purple-400/80">
@@ -947,7 +947,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                           <span>💰</span>
                           <span>{isRTL ? 'الأرباح' : 'Earnings'}</span>
                         </div>
-                        <div className="mt-1 font-mono text-2xl font-black text-emerald-400 drop-shadow-sm">
+                        <div className="work-metric-value mt-1 font-mono font-black text-emerald-400 drop-shadow-sm">
                           +{formatCurrency(pieceLiveEarnings, cur)}
                         </div>
                         <div className="text-[10px] text-emerald-300/70">
@@ -959,7 +959,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                 )}
 
                 {/* Timer Controls (Start / Pause / Stop & Save) */}
-                <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="work-timer-controls pt-2">
                   {!currentTimer.isRunning ? (
                     <button
                       type="button"
