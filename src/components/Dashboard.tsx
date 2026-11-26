@@ -242,7 +242,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         {/* Monthly Income */}
         <div className="rounded-2xl border border-emerald-500/20 bg-[#15152b] p-4 shadow-sm">
           <div className="flex items-center justify-between text-xs font-bold text-emerald-400">
@@ -275,43 +275,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Debts You Owe */}
-        <div className="rounded-2xl border border-amber-500/20 bg-[#15152b] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-bold text-amber-400">
-            <span>{isRTL ? 'ديون عليك' : 'Debts Owed'}</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
-              <Users className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-lg font-black text-amber-400">
-            {formatCurrency(debtsYouOwe, cur)}
-          </div>
-          <div className="mt-1 text-[10px] text-purple-300/60">
-            {isRTL ? 'مطلوب منك سدادها' : 'Pending payment by you'}
-          </div>
-        </div>
-
-        {/* Receivables */}
-        <div className="rounded-2xl border border-cyan-500/20 bg-[#15152b] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-bold text-cyan-400">
-            <span>{isRTL ? 'مستحقات لك' : 'Receivables'}</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10">
-              <DollarSign className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-lg font-black text-cyan-400">
-            {formatCurrency(receivablesOwedToYou, cur)}
-          </div>
-          <div className="mt-1 text-[10px] text-purple-300/60">
-            {isRTL ? 'تنتظر تحصيلها من الآخرين' : 'Owed to you by others'}
-          </div>
-        </div>
       </div>
 
       {/* Quick navigation: keep the most-used areas one tap away. */}
       <section className="space-y-3">
         <h3 className="px-1 text-sm font-extrabold text-[var(--text-primary)]">{isRTL ? 'وصول سريع' : 'Quick access'}</h3>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button type="button" onClick={onOpenAddPerson} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
             <Users className="h-5 w-5 text-[var(--accent)]" />
             <span>{isRTL ? 'الأشخاص والديون' : 'People & debts'}</span>
@@ -319,10 +288,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <button type="button" onClick={onOpenAddWork} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
             <Briefcase className="h-5 w-5 text-[var(--accent)]" />
             <span>{isRTL ? 'الأعمال' : 'Work'}</span>
-          </button>
-          <button type="button" onClick={() => onNavigate('info')} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
-            <PieChart className="h-5 w-5 text-[var(--accent)]" />
-            <span>{isRTL ? 'الميزانية والادخار' : 'Budget & savings'}</span>
           </button>
         </div>
       </section>
