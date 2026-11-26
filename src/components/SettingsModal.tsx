@@ -59,7 +59,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const [activeTheme, setActiveTheme] = useState<string>(state.settings?.theme || 'purple');
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
-  const [userEmail, setUserEmail] = useState<string>(state.settings?.userEmail || 'loay94an@gmail.com');
+  const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
+  const [userEmail, setUserEmail] = useState<string>(savedEmail);
   const [storageInfo, setStorageInfo] = useState<{ usedBytes: number; quotaBytes: number } | null>(null);
 
   const [securityType, setSecurityType] = useState<'off' | 'pin' | 'pattern'>(state.security?.type || 'off');
@@ -72,7 +73,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (isOpen) {
       setActiveTheme(state.settings?.theme || 'purple');
       setCurrency(state.settings?.currency || 'ر.س');
-      setUserEmail(state.settings?.userEmail || 'loay94an@gmail.com');
+      setUserEmail(state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || ''));
       setSecurityType(state.security?.type || 'off');
       setNewPin(state.security?.pin || '');
       setConfirmingReset(false);
@@ -96,7 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onUpdateSettings({
       theme: activeTheme,
       currency: currency.trim() || 'ر.س',
-      userEmail: userEmail.trim() || 'loay94an@gmail.com',
+      userEmail: userEmail.trim(),
     });
 
     if (securityType === 'pin') {
@@ -275,7 +276,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             type="email"
             value={userEmail}
             onChange={(e) => setUserEmail(e.target.value)}
-            placeholder="loay94an@gmail.com"
+            placeholder={isRTL ? "أدخل بريدك الإلكتروني (اختياري)" : "Enter your email (optional)"}
             className="w-full rounded-xl border border-purple-900/50 bg-[#101026] p-2 text-xs font-bold text-white outline-none"
           />
         </div>
