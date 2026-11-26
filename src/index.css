@@ -106,7 +106,7 @@ body, input, select, textarea, button {
 [class*="text-emerald-"], [class*="text-red-"], [class*="text-rose-"],
 [class*="text-orange-"], [class*="text-amber-"], [class*="text-yellow-"],
 [class*="text-pink-"], [class*="text-slate-"], [class*="text-violet-"],
-[class*="text-fuchsia-"], [class*="text-sky-"], [class~="text-white"] {
+[class*="text-fuchsia-"], [class*="text-sky-"], [class*="text-white"] {
   color: #27272a !important;
 }
 
@@ -191,4 +191,11 @@ button[class*="bg-purple-600"]:hover, button[class*="bg-emerald-600"]:hover,
 button[class*="bg-red-600"]:hover, button[class*="bg-cyan-600"]:hover,
 button[class*="bg-blue-600"]:hover, button[class*="bg-amber-600"]:hover {
   background-color: #3f3f46 !important;
+}
+
+[class*="placeholder-purple-"]::placeholder,
+[class*="placeholder-emerald-"]::placeholder,
+[class*="placeholder-cyan-"]::placeholder,
+[class*="placeholder-blue-"]::placeholder {
+  color: #a1a1aa !important;
 }
