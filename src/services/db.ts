@@ -58,7 +58,7 @@ export const INITIAL_STATE: AppState = {
   settings: {
     currency: 'ر.س',
     language: 'ar',
-    theme: 'mono',
+    theme: 'navy-emerald',
     appearance: 'light',
     autoCloudSync: false,
     syncKey: createSecureSyncKey(),
