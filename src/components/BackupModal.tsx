@@ -79,12 +79,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const summaryText = sharingService.formatSummaryMessage(state);
 
   // --- Export Actions ---
-  const handleDownloadFile = () => {
+  const handleDownloadFile = async () => {
     try {
-      sharingService.downloadJSONBackup(safeBackupState);
-      showToast(isRTL ? '✅ تم تنزيل ملف النسخة الاحتياطية بنجاح' : '✅ Backup file downloaded');
+      await sharingService.downloadJSONBackup(safeBackupState);
+      showToast(isRTL ? '✅ تم تجهيز ملف JSON للمشاركة أو الحفظ' : '✅ JSON backup is ready to save or share');
     } catch (e: any) {
-      showToast(isRTL ? 'حدث خطأ أثناء التنزيل: ' + e.message : 'Download failed');
+      showToast(isRTL ? 'حدث خطأ أثناء التصدير: ' + (e?.message || 'تعذر إنشاء الملف') : 'Export failed: ' + (e?.message || 'Could not create file'));
     }
   };
 
