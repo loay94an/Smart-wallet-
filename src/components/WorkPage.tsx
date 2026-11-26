@@ -532,7 +532,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#0f0f23',
+        backgroundColor: '#ffffff',
       });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -553,7 +553,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#0f0f23',
+        backgroundColor: '#ffffff',
       });
       const imageBlob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Could not create PNG')), 'image/png');

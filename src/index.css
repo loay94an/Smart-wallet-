@@ -60,3 +60,144 @@
   animation: earningsGlow 2s infinite ease-in-out;
 }
 
+
+/* Neutral monochrome visual system */
+:root {
+  color-scheme: light;
+  --primary-theme: #27272a !important;
+  --surface: #ffffff;
+  --surface-muted: #f4f4f5;
+  --surface-soft: #fafafa;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --border-neutral: #e4e4e7;
+}
+
+html, body {
+  background: #f5f5f5 !important;
+  color: #18181b !important;
+}
+
+body, input, select, textarea, button {
+  color-scheme: light;
+}
+
+/* Replace legacy dark and colored surfaces across every screen and modal. */
+[class*="bg-[#"],
+[class*="bg-purple-"], [class*="bg-indigo-"], [class*="bg-blue-"],
+[class*="bg-cyan-"], [class*="bg-teal-"], [class*="bg-green-"],
+[class*="bg-emerald-"], [class*="bg-red-"], [class*="bg-rose-"],
+[class*="bg-orange-"], [class*="bg-amber-"], [class*="bg-yellow-"],
+[class*="bg-pink-"], [class*="bg-slate-"], [class*="bg-violet-"],
+[class*="bg-fuchsia-"], [class*="bg-sky-"] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* The app canvas and navigation use soft gray rather than pure white. */
+.min-h-screen, nav.fixed, header.sticky {
+  background-color: #f5f5f5 !important;
+  background-image: none !important;
+}
+
+/* Neutralize all legacy text accent colors. */
+[class*="text-purple-"], [class*="text-indigo-"], [class*="text-blue-"],
+[class*="text-cyan-"], [class*="text-teal-"], [class*="text-green-"],
+[class*="text-emerald-"], [class*="text-red-"], [class*="text-rose-"],
+[class*="text-orange-"], [class*="text-amber-"], [class*="text-yellow-"],
+[class*="text-pink-"], [class*="text-slate-"], [class*="text-violet-"],
+[class*="text-fuchsia-"], [class*="text-sky-"], [class*="text-white"] {
+  color: #27272a !important;
+}
+
+/* Soft, consistent borders regardless of the original accent color. */
+[class*="border-purple-"], [class*="border-indigo-"], [class*="border-blue-"],
+[class*="border-cyan-"], [class*="border-teal-"], [class*="border-green-"],
+[class*="border-emerald-"], [class*="border-red-"], [class*="border-rose-"],
+[class*="border-orange-"], [class*="border-amber-"], [class*="border-yellow-"],
+[class*="border-pink-"], [class*="border-slate-"], [class*="border-violet-"],
+[class*="border-fuchsia-"], [class*="border-sky-"] {
+  border-color: #e4e4e7 !important;
+}
+
+/* Turn multi-color gradients into subtle gray gradients. */
+[class*="from-purple-"], [class*="from-indigo-"], [class*="from-blue-"],
+[class*="from-cyan-"], [class*="from-teal-"], [class*="from-green-"],
+[class*="from-emerald-"], [class*="from-red-"], [class*="from-rose-"],
+[class*="from-orange-"], [class*="from-amber-"], [class*="from-yellow-"],
+[class*="from-pink-"], [class*="from-[#"] {
+  --tw-gradient-from: #f4f4f5 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(244 244 245 / 0) var(--tw-gradient-to-position) !important;
+}
+[class*="via-purple-"], [class*="via-indigo-"], [class*="via-blue-"],
+[class*="via-cyan-"], [class*="via-teal-"], [class*="via-green-"],
+[class*="via-emerald-"], [class*="via-red-"], [class*="via-rose-"],
+[class*="via-orange-"], [class*="via-amber-"], [class*="via-yellow-"],
+[class*="via-pink-"], [class*="via-[#"] {
+  --tw-gradient-stops: var(--tw-gradient-from), #e4e4e7 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+[class*="to-purple-"], [class*="to-indigo-"], [class*="to-blue-"],
+[class*="to-cyan-"], [class*="to-teal-"], [class*="to-green-"],
+[class*="to-emerald-"], [class*="to-red-"], [class*="to-rose-"],
+[class*="to-orange-"], [class*="to-amber-"], [class*="to-yellow-"],
+[class*="to-pink-"], [class*="to-[#"] {
+  --tw-gradient-to: #e4e4e7 var(--tw-gradient-to-position) !important;
+}
+
+[class*="shadow-purple-"], [class*="shadow-emerald-"], [class*="shadow-red-"],
+[class*="shadow-amber-"], [class*="shadow-blue-"] {
+  --tw-shadow-color: rgb(24 24 27 / 0.08) !important;
+}
+[class*="ring-purple-"], [class*="accent-purple-"] {
+  --tw-ring-color: #a1a1aa !important;
+  accent-color: #27272a !important;
+}
+::-webkit-scrollbar-thumb { background: #d4d4d8; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+/* Remove colored glow animations; retain restrained feedback. */
+.animate-pulse-glow, .animate-earnings-glow {
+  animation: none !important;
+  box-shadow: 0 2px 10px rgb(24 24 27 / 0.08) !important;
+}
+
+/* SVG icon fills and strokes also follow the monochrome palette. */
+[class*="fill-purple-"], [class*="fill-indigo-"], [class*="fill-blue-"],
+[class*="fill-cyan-"], [class*="fill-teal-"], [class*="fill-green-"],
+[class*="fill-emerald-"], [class*="fill-red-"], [class*="fill-rose-"],
+[class*="fill-orange-"], [class*="fill-amber-"], [class*="fill-yellow-"],
+[class*="fill-pink-"], [class*="fill-slate-"] { fill: #52525b !important; }
+[class*="stroke-purple-"], [class*="stroke-indigo-"], [class*="stroke-blue-"],
+[class*="stroke-cyan-"], [class*="stroke-teal-"], [class*="stroke-green-"],
+[class*="stroke-emerald-"], [class*="stroke-red-"], [class*="stroke-rose-"],
+[class*="stroke-orange-"], [class*="stroke-amber-"], [class*="stroke-yellow-"],
+[class*="stroke-pink-"], [class*="stroke-slate-"] { stroke: #a1a1aa !important; }
+
+/* Neutral placeholders, separators, and primary action buttons. */
+[class*="placeholder-purple-"]::placeholder,
+[class*="placeholder-emerald-"]::placeholder,
+[class*="placeholder-cyan-"]::placeholder,
+[class*="placeholder-blue-"]::placeholder {
+  color: #a1a1aa !important;
+}
+[class*="divide-purple-"], [class*="divide-emerald-"], [class*="divide-red-"] {
+  border-color: #e4e4e7 !important;
+}
+button[class*="bg-purple-600"], button[class*="bg-emerald-600"],
+button[class*="bg-red-600"], button[class*="bg-cyan-600"],
+button[class*="bg-blue-600"], button[class*="bg-amber-600"] {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+}
+button[class*="bg-purple-600"]:hover, button[class*="bg-emerald-600"]:hover,
+button[class*="bg-red-600"]:hover, button[class*="bg-cyan-600"]:hover,
+button[class*="bg-blue-600"]:hover, button[class*="bg-amber-600"]:hover {
+  background-color: #3f3f46 !important;
+}
+
+[class*="placeholder-purple-"]::placeholder,
+[class*="placeholder-emerald-"]::placeholder,
+[class*="placeholder-cyan-"]::placeholder,
+[class*="placeholder-blue-"]::placeholder {
+  color: #a1a1aa !important;
+}

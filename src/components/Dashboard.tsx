@@ -106,11 +106,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Smart circle segments
   const segments = [
-    { name: isRTL ? '💰 الدخل العام' : 'Income', value: totalIncome, color: '#10b981' },
-    { name: isRTL ? '💸 المصروفات' : 'Expenses', value: totalExpense, color: '#ef4444' },
-    { name: isRTL ? '💼 مستحقات الأعمال' : 'Work Dues', value: Math.max(0, workNetRemaining), color: '#8b5cf6' },
-    { name: isRTL ? '🔴 ديون عليك' : 'Debts You Owe', value: debtsYouOwe, color: '#f59e0b' },
-    { name: isRTL ? '🟢 مستحقات لك' : 'Receivables', value: receivablesOwedToYou, color: '#06b6d4' },
+    { name: isRTL ? '💰 الدخل العام' : 'Income', value: totalIncome, color: '#27272a' },
+    { name: isRTL ? '💸 المصروفات' : 'Expenses', value: totalExpense, color: '#52525b' },
+    { name: isRTL ? '💼 مستحقات الأعمال' : 'Work Dues', value: Math.max(0, workNetRemaining), color: '#71717a' },
+    { name: isRTL ? '🔴 ديون عليك' : 'Debts You Owe', value: debtsYouOwe, color: '#a1a1aa' },
+    { name: isRTL ? '🟢 مستحقات لك' : 'Receivables', value: receivablesOwedToYou, color: '#d4d4d8' },
   ].filter((s) => s.value > 0);
 
   const circleTotal = segments.reduce((s, i) => s + i.value, 0);

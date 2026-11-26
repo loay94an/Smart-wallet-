@@ -1,22 +1,180 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<defs>
- <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07132f"/><stop offset="1" stop-color="#101f49"/></linearGradient>
- <linearGradient id="wallet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#37f0c0"/><stop offset=".48" stop-color="#079e91"/><stop offset="1" stop-color="#064c59"/></linearGradient>
- <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4a4"/><stop offset=".45" stop-color="#ffc928"/><stop offset="1" stop-color="#d88705"/></linearGradient>
- <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="12"/></filter>
-</defs>
-<rect width="512" height="512" rx="112" fill="url(#bg)"/>
-<circle cx="256" cy="163" r="92" fill="#ffbe23" opacity=".18" filter="url(#shadow)"/>
-<circle cx="256" cy="153" r="82" fill="url(#gold)" stroke="#fff0a0" stroke-width="8"/>
-<circle cx="256" cy="153" r="65" fill="none" stroke="#b87508" stroke-width="5"/>
-<path d="M274 111c-8-8-20-12-34-10-18 2-29 13-29 28 0 18 17 25 42 32 26 8 39 17 39 37 0 23-20 39-48 40-20 1-39-6-52-19" fill="none" stroke="#fff2b0" stroke-width="13" stroke-linecap="round"/>
-<path d="M256 88v143" stroke="#fff2b0" stroke-width="11" stroke-linecap="round"/>
-<path d="M87 224c0-29 23-52 52-52h235c29 0 52 23 52 52v171c0 29-23 52-52 52H139c-29 0-52-23-52-52z" fill="#032f3b" opacity=".8"/>
-<path d="M72 246c0-30 24-54 54-54h260c30 0 54 24 54 54v161c0 30-24 54-54 54H126c-30 0-54-24-54-54z" fill="url(#wallet)" stroke="#62f5d0" stroke-width="9"/>
-<path d="M91 282c42-62 106-92 184-92h122c24 0 43 19 43 43v58H91z" fill="#087b78" opacity=".75"/>
-<path d="M96 322c44-69 110-105 198-105h115" fill="none" stroke="#79f8dc" stroke-width="7" stroke-dasharray="18 19" stroke-linecap="round" opacity=".75"/>
-<path d="M72 341c-18 10-30 27-30 48 0 39 31 70 70 70h252" fill="none" stroke="url(#gold)" stroke-width="18" stroke-linecap="round"/>
-<path d="M342 303h126c16 0 29 13 29 29v64c0 16-13 29-29 29H342c-16 0-29-13-29-29v-64c0-16 13-29 29-29z" fill="#056a67" stroke="#52f2cc" stroke-width="8"/>
-<circle cx="377" cy="364" r="30" fill="url(#gold)" stroke="#fff0a0" stroke-width="5"/>
-<path d="m363 364 10 10 20-23" fill="none" stroke="#09244a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- تدرج الخلفية الكحلي الفاخر -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="0.5" stop-color="#1E293B"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    
+    <!-- تدرج المحفظة (أخضر زمردي) -->
+    <linearGradient id="wallet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10B981"/>
+      <stop offset="0.5" stop-color="#059669"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    
+    <!-- تدرج الشريحة الذكية (ذهبي) -->
+    <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="0.5" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+    
+    <!-- تدرج العملات الذهبية -->
+    <radialGradient id="coin" cx="0.3" cy="0.3">
+      <stop offset="0" stop-color="#FEF3C7"/>
+      <stop offset="0.5" stop-color="#FCD34D"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </radialGradient>
+    
+    <!-- تدرج الرسم البياني -->
+    <linearGradient id="chart" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#10B981" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#10B981" stop-opacity="0.8"/>
+    </linearGradient>
+    
+    <!-- توهج ذهبي -->
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FCD34D" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#FCD34D" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- ظل احترافي -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    
+    <!-- توهج ناعم -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- الخلفية -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)"/>
+  
+  <!-- إطار داخلي ذهبي خفيف -->
+  <rect x="12" y="12" width="488" height="488" rx="103" 
+        fill="none" stroke="#FCD34D" stroke-width="1.5" stroke-opacity="0.2"/>
+
+  <!-- توهج خلف المحفظة -->
+  <circle cx="256" cy="260" r="200" fill="url(#glow)"/>
+
+  <!-- دوائر إلكترونية (رمز الذكاء) -->
+  <g opacity="0.25" stroke="#10B981" stroke-width="1.5" fill="none">
+    <circle cx="100" cy="120" r="30"/>
+    <circle cx="412" cy="120" r="30"/>
+    <circle cx="100" cy="400" r="30"/>
+    <circle cx="412" cy="400" r="30"/>
+    <path d="M130 120 L180 180 M382 120 L332 180 M130 400 L180 340 M382 400 L332 340"/>
+    <circle cx="100" cy="120" r="4" fill="#10B981"/>
+    <circle cx="412" cy="120" r="4" fill="#10B981"/>
+    <circle cx="100" cy="400" r="4" fill="#10B981"/>
+    <circle cx="412" cy="400" r="4" fill="#10B981"/>
+  </g>
+
+  <!-- المحفظة المالية -->
+  <g filter="url(#shadow)">
+    <!-- جسم المحفظة الرئيسي -->
+    <path d="M120 180 L392 180 Q412 180 412 200 L412 380 Q412 400 392 400 L120 400 Q100 400 100 380 L100 200 Q100 180 120 180 Z" 
+          fill="url(#wallet)"/>
+    
+    <!-- حافة علوية (غطاء المحفظة) -->
+    <path d="M100 200 Q100 180 120 180 L392 180 Q412 180 412 200 L412 220 L100 220 Z" 
+          fill="#047857" opacity="0.6"/>
+    
+    <!-- خط خياطة -->
+    <path d="M115 195 L397 195" stroke="#FDE68A" stroke-width="1.5" 
+          stroke-dasharray="4 3" opacity="0.6"/>
+    <path d="M115 385 L397 385" stroke="#FDE68A" stroke-width="1.5" 
+          stroke-dasharray="4 3" opacity="0.6"/>
+    
+    <!-- جيب المحفظة الجانبي -->
+    <path d="M340 260 L412 260 L412 330 Q412 340 402 340 L350 340 Q340 340 340 330 Z" 
+          fill="#047857"/>
+    <path d="M340 260 L412 260" stroke="#FDE68A" stroke-width="1" opacity="0.5"/>
+    
+    <!-- زر الإغلاق -->
+    <circle cx="376" cy="300" r="10" fill="url(#chip)"/>
+    <circle cx="376" cy="300" r="6" fill="#D97706"/>
+  </g>
+
+  <!-- الشريحة الذكية (Smart Chip) -->
+  <g filter="url(#softGlow)" transform="translate(150 250)">
+    <rect x="0" y="0" width="90" height="70" rx="8" fill="url(#chip)"/>
+    
+    <!-- دوائر الشريحة الداخلية -->
+    <rect x="8" y="8" width="74" height="54" rx="4" fill="none" 
+          stroke="#D97706" stroke-width="1.5"/>
+    <line x1="8" y1="25" x2="82" y2="25" stroke="#D97706" stroke-width="1"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#D97706" stroke-width="1"/>
+    <line x1="30" y1="8" x2="30" y2="62" stroke="#D97706" stroke-width="1"/>
+    <line x1="60" y1="8" x2="60" y2="62" stroke="#D97706" stroke-width="1"/>
+    
+    <!-- نقاط الاتصال -->
+    <circle cx="20" cy="17" r="2" fill="#D97706"/>
+    <circle cx="45" cy="17" r="2" fill="#D97706"/>
+    <circle cx="70" cy="17" r="2" fill="#D97706"/>
+    <circle cx="20" cy="53" r="2" fill="#D97706"/>
+    <circle cx="45" cy="53" r="2" fill="#D97706"/>
+    <circle cx="70" cy="53" r="2" fill="#D97706"/>
+  </g>
+
+  <!-- رسم بياني صاعد (نمو مالي) -->
+  <g filter="url(#softGlow)">
+    <!-- منطقة تحت المنحنى -->
+    <path d="M260 350 L280 330 L300 340 L320 300 L340 280 L340 370 L260 370 Z" 
+          fill="url(#chart)"/>
+    
+    <!-- خط الرسم البياني -->
+    <path d="M260 350 L280 330 L300 340 L320 300 L340 280" 
+          stroke="#10B981" stroke-width="3" fill="none" 
+          stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- نقاط البيانات -->
+    <circle cx="260" cy="350" r="4" fill="#10B981" stroke="white" stroke-width="2"/>
+    <circle cx="280" cy="330" r="4" fill="#10B981" stroke="white" stroke-width="2"/>
+    <circle cx="300" cy="340" r="4" fill="#10B981" stroke="white" stroke-width="2"/>
+    <circle cx="320" cy="300" r="4" fill="#10B981" stroke="white" stroke-width="2"/>
+    <circle cx="340" cy="280" r="5" fill="#FCD34D" stroke="white" stroke-width="2"/>
+    
+    <!-- سهم صاعد -->
+    <path d="M340 280 L355 265 M355 265 L348 268 M355 265 L352 272" 
+          stroke="#FCD34D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- العملات الذهبية -->
+  <g filter="url(#shadow)">
+    <!-- العملة الأولى -->
+    <circle cx="180" cy="150" r="28" fill="url(#coin)"/>
+    <circle cx="180" cy="150" r="22" fill="none" stroke="#D97706" stroke-width="1.5"/>
+    <text x="180" y="160" text-anchor="middle" font-family="Arial, sans-serif" 
+          font-size="28" font-weight="bold" fill="#78350F">$</text>
+    
+    <!-- العملة الثانية -->
+    <circle cx="340" cy="140" r="24" fill="url(#coin)"/>
+    <circle cx="340" cy="140" r="18" fill="none" stroke="#D97706" stroke-width="1.5"/>
+    <text x="340" y="148" text-anchor="middle" font-family="Arial, sans-serif" 
+          font-size="22" font-weight="bold" fill="#78350F">€</text>
+  </g>
+
+  <!-- موجات ذكية (AI Waves) -->
+  <g opacity="0.7" stroke="#FCD34D" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M440 250 Q450 240 450 250 Q450 260 460 250"/>
+    <path d="M445 230 Q460 215 460 230 Q460 245 475 230"/>
+    <path d="M450 210 Q470 190 470 210 Q470 230 490 210"/>
+  </g>
+
+  <!-- نقاط لامعة زخرفية -->
+  <g fill="#FCD34D" opacity="0.9">
+    <circle cx="80" cy="280" r="3"/>
+    <circle cx="450" cy="350" r="3"/>
+    <circle cx="120" cy="430" r="2.5"/>
+    <circle cx="400" cy="440" r="2.5"/>
+  </g>
 </svg>
