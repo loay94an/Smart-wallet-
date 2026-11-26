@@ -435,7 +435,7 @@ export function parseAndInspectBackup(input: string | object): {
       autoCloudSync: Boolean(rawSettings.autoCloudSync),
       syncKey: rawSettings.syncKey || root.syncKey || INITIAL_STATE.settings.syncKey,
       syncServerUrl: typeof rawSettings.syncServerUrl === 'string' ? rawSettings.syncServerUrl : '',
-      userEmail: rawSettings.userEmail || root.email || 'loay94an@gmail.com',
+      userEmail: (() => { const email = rawSettings.userEmail || root.email || ''; return email === 'loay94an@gmail.com' ? '' : String(email); })(),
     };
 
     // Security
