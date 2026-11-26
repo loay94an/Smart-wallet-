@@ -434,7 +434,8 @@ export function parseAndInspectBackup(input: string | object): {
     const settings = {
       currency: rawSettings.currency || root.currency || root.العملة || 'ر.س',
       language: (rawSettings.language === 'en' || root.language === 'en') ? 'en' as const : 'ar' as const,
-      theme: rawSettings.theme || 'purple',
+      theme: rawSettings.theme === 'purple' ? 'mono' : (rawSettings.theme || 'mono'),
+      appearance: rawSettings.appearance === 'dark' ? 'dark' as const : 'light' as const,
       autoCloudSync: Boolean(rawSettings.autoCloudSync),
       syncKey: rawSettings.syncKey || root.syncKey || INITIAL_STATE.settings.syncKey,
       syncServerUrl: typeof rawSettings.syncServerUrl === 'string' ? rawSettings.syncServerUrl : '',
