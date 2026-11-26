@@ -629,12 +629,12 @@ export const exportService = {
     const items = [
       ...logs.map((log) => ({
         title: `${isRTL ? 'إنجاز' : 'Work log'}: ${log.desc || (isRTL ? 'سجل عمل' : 'Work record')}`,
-        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
+        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'من' : 'From'}: ${log.start || '-'} • ${isRTL ? 'إلى' : 'To'}: ${log.end || '-'} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
         amount: formatCurrency((isPiece ? Number(log.quantity || 0) : Number(log.hours || 0)) * Number(work.rate || 0), cur),
       })),
       ...payments.map((payment) => ({
         title: `${isRTL ? 'دفعة مستلمة' : 'Payment received'}: ${payment.desc || payment.type}`,
-        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${payment.date} • ${isRTL ? 'النوع' : 'Type'}: ${payment.type} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method}`,
+        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${payment.date} • ${isRTL ? 'النوع' : 'Type'}: ${payment.type} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method} • ${payment.createdAt || ''} • ${payment.desc || ''}`,
         amount: formatCurrency(payment.amount, cur),
       })),
       ...goals.map((goal) => ({
