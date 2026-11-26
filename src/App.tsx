@@ -34,6 +34,7 @@ import { PeoplePage } from './components/PeoplePage';
 import { WorkPage } from './components/WorkPage';
 import { InfoHubPage } from './components/InfoHubPage';
 import { ToolsPage } from './components/ToolsPage';
+import { MoreHub } from './components/MoreHub';
 import { NotebooksPage } from './components/NotebooksPage';
 import { LockScreen } from './components/LockScreen';
 import { CloudSyncModal } from './components/CloudSyncModal';
@@ -648,6 +649,14 @@ export default function App() {
             onSaveFinancialGoal={handleSaveFinancialGoal}
             onDeleteFinancialGoal={handleDeleteFinancialGoal}
             onAddAmountToGoal={handleAddAmountToGoal}
+            language={lang}
+          />
+        )}
+
+        {activeTab === 'more' && (
+          <MoreHub
+            onOpenWork={() => setActiveTab('work')}
+            onOpenTools={() => setActiveTab('tools')}
             language={lang}
           />
         )}
