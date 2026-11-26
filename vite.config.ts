@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // GitHub Pages hosts this repository under /Smart-wallet-/. Keep local and Capacitor builds at root.
+    base: process.env.GITHUB_ACTIONS === 'true' ? '/Smart-wallet-/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
