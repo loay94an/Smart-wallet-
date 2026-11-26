@@ -61,7 +61,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
   const savedEmail = state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || '');
   const [userEmail, setUserEmail] = useState<string>(savedEmail);
-  const [storageInfo, setStorageInfo] = useState<{ usedBytes: number; quotaBytes: number } | null>(null);
+  const [storageInfo, setStorageInfo] = useState<{ usedBytes: number; quotaBytes: number; isPersisted: boolean } | null>(null);
+  const [requestingStorage, setRequestingStorage] = useState(false);
 
   const [securityType, setSecurityType] = useState<'off' | 'pin' | 'pattern'>(state.security?.type || 'off');
   const [newPin, setNewPin] = useState<string>(state.security?.pin || '');
@@ -302,19 +303,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 5. Storage Info */}
-        <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 text-xs space-y-1">
+        <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 text-xs space-y-2">
           <div className="flex items-center justify-between text-purple-200 font-bold">
             <span className="flex items-center gap-1.5">
               <Database className="h-4 w-4 text-emerald-400" />
-              <span>{isRTL ? 'محرك التخزين المحلي' : 'Storage Engine'}</span>
+              <span>{isRTL ? 'التخزين المحلي الموسّع' : 'Expanded local storage'}</span>
             </span>
             <span className="text-emerald-400">IndexedDB ✓</span>
           </div>
-          {storageInfo && storageInfo.usedBytes > 0 && (
-            <p className="text-[11px] text-purple-300/60 pt-1">
-              {isRTL ? 'المساحة المستخدمة:' : 'Used storage:'}{' '}
-              {(storageInfo.usedBytes / 1024).toFixed(1)} KB
-            </p>
+          {storageInfo && (
+            <>
+              <div className="flex justify-between text-[11px] text-purple-300/80">
+                <span>{isRTL ? 'المستخدم' : 'Used'}</span>
+                <span>{(storageInfo.usedBytes / (1024 * 1024)).toFixed(2)} MB</span>
+              </div>
+              <div className="flex justify-between text-[11px] text-purple-300/80">
+                <span>{isRTL ? 'الحصة المتاحة من النظام' : 'Browser quota'}</span>
+                <span>{storageInfo.quotaBytes > 0 ? (storageInfo.quotaBytes / (1024 * 1024)).toFixed(1) + ' MB' : (isRTL ? 'غير متاحة' : 'Unavailable')}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[#0c0c20]">
+                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${storageInfo.quotaBytes > 0 ? Math.min(100, (storageInfo.usedBytes / storageInfo.quotaBytes) * 100) : 0}%` }} />
+              </div>
+              <p className="text-[10px] text-purple-300/70">
+                {storageInfo.isPersisted
+                  ? (isRTL ? 'التخزين الدائم مفعّل؛ تقل احتمالية حذف البيانات تلقائياً.' : 'Persistent storage is enabled; automatic eviction is less likely.')
+                  : (isRTL ? 'يمكن طلب حماية البيانات من الحذف التلقائي. السعة الفعلية يحددها Android والمساحة الحرة.' : 'You can request protection from automatic eviction. Actual capacity is controlled by Android and free disk space.')}
+              </p>
+              {!storageInfo.isPersisted && (
+                <button type="button" disabled={requestingStorage} onClick={async () => {
+                  setRequestingStorage(true);
+                  const granted = await dbService.requestPersistentStorage();
+                  const info = await dbService.getStorageInfo();
+                  setStorageInfo(info);
+                  setRequestingStorage(false);
+                  showStatus(granted
+                    ? (isRTL ? 'تم تفعيل حماية التخزين المحلي.' : 'Persistent storage protection enabled.')
+                    : (isRTL ? 'لم يمنح النظام الإذن. سيستمر التطبيق باستخدام السعة المتاحة.' : 'The system did not grant the request. The app will continue using available storage.'), !granted);
+                }} className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2.5 font-bold text-emerald-300 disabled:opacity-50">
+                  {requestingStorage
+                    ? (isRTL ? 'جارٍ الطلب...' : 'Requesting...')
+                    : (isRTL ? 'زيادة حماية التخزين المحلي' : 'Increase storage protection')}
+                </button>
+              )}
+            </>
           )}
         </div>
 
