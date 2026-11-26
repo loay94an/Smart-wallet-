@@ -175,6 +175,9 @@ export const exportService = {
         [isRTL ? `المقبوض (${cur})` : `Received (${cur})`]: received,
         [isRTL ? `المتبقي بذمة العميل (${cur})` : `Due Balance (${cur})`]: remaining,
         [isRTL ? 'الحالة' : 'Status']: w.status,
+        [isRTL ? 'تاريخ البداية' : 'Start date']: w.startDate || '',
+        [isRTL ? 'تاريخ النهاية' : 'End date']: w.endDate || '',
+        [isRTL ? 'الوصف' : 'Description']: w.desc || '',
       };
     });
 
@@ -188,6 +191,8 @@ export const exportService = {
         [isRTL ? 'م' : 'No']: idx + 1,
         [isRTL ? 'المشروع' : 'Project']: w?.name || (isRTL ? 'غير معروف' : 'Unknown'),
         [isRTL ? 'التاريخ' : 'Date']: l.date,
+        [isRTL ? 'وقت البداية' : 'Start time']: l.start || '',
+        [isRTL ? 'وقت النهاية' : 'End time']: l.end || '',
         [isRTL ? 'الساعات' : 'Hours']: Number(l.hours || 0),
         [isRTL ? 'الكمية المنجزة' : 'Quantity']: Number(l.quantity || 0),
         [isRTL ? `المبلغ المستحق (${cur})` : `Earned (${cur})`]: earned,
@@ -207,6 +212,7 @@ export const exportService = {
           p.type === 'salary' ? (isRTL ? 'راتب' : 'Salary') : p.type === 'bonus' ? (isRTL ? 'مكافأة' : 'Bonus') : (isRTL ? 'دفعة' : 'Payment'),
         [isRTL ? 'طريقة الدفع' : 'Method']: p.method,
         [isRTL ? 'البيان' : 'Description']: p.desc || '',
+        [isRTL ? 'وقت التسجيل' : 'Created at']: p.createdAt || '',
       };
     });
 
@@ -508,7 +514,7 @@ export const exportService = {
         const earned = (piece ? Number(log.quantity || 0) : Number(log.hours || 0)) * Number(work?.rate || 0);
         return {
           title: `${work?.name || ''} • ${isRTL ? 'إنجاز' : 'Work log'}: ${log.desc || ''}`,
-          subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
+          subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'من' : 'From'}: ${log.start || '-'} • ${isRTL ? 'إلى' : 'To'}: ${log.end || '-'} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
           amount: formatCurrency(earned, cur),
         };
       }),
@@ -629,6 +635,10 @@ export const exportService = {
       items,
       [
         { label: isRTL ? 'العميل' : 'Client', value: work.client || '-' },
+        { label: isRTL ? 'الحالة' : 'Status', value: work.status },
+        { label: isRTL ? 'تاريخ البداية' : 'Start date', value: work.startDate || '-' },
+        { label: isRTL ? 'تاريخ النهاية' : 'End date', value: work.endDate || '-' },
+        { label: isRTL ? 'الوصف' : 'Description', value: work.desc || '-' },
         { label: isRTL ? 'طريقة الحساب' : 'Calculation', value: isPiece ? (isRTL ? 'بالقطعة' : 'Per piece') : (isRTL ? 'بالساعة' : 'Hourly') },
         { label: isRTL ? 'سعر الوحدة' : 'Unit rate', value: formatCurrency(work.rate, cur) },
         { label: isRTL ? 'إجمالي الوحدات' : 'Total units', value: String(totalUnits) },
