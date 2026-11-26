@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import {
   AppState,
   Transaction,
@@ -105,12 +107,17 @@ export default function App() {
     root.lang = lang;
     root.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-    const paletteAliases: Record<string, string> = { purple: 'mono', blue: 'ocean', green: 'emerald', orange: 'amber', pink: 'rose' };
+    const paletteAliases: Record<string, string> = { purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' };
     const requestedPalette = state.settings?.theme || 'mono';
     const palette = paletteAliases[requestedPalette] || requestedPalette;
     const allowedPalettes = ['mono', 'ocean', 'emerald', 'violet', 'amber', 'rose'];
     root.dataset.themePalette = allowedPalettes.includes(palette) ? palette : 'mono';
-    root.dataset.themeMode = state.settings?.appearance === 'dark' ? 'dark' : 'light';
+    const isDark = state.settings?.appearance === 'dark';
+    root.dataset.themeMode = isDark ? 'dark' : 'light';
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setBackgroundColor({ color: isDark ? '#101216' : '#f5f5f5' }).catch(() => undefined);
+      StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => undefined);
+    }
   }, [state.settings?.language, state.settings?.theme, state.settings?.appearance]);
 
   // Auto Cloud Sync if enabled
