@@ -131,6 +131,17 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   // Custom pieces input state
   const [customPiecesInput, setCustomPiecesInput] = useState<string>('');
 
+  // Restore timer data when a backup is imported or replaced.
+  useEffect(() => {
+    if (!state.workTimers) return;
+    setWorkTimers(state.workTimers as Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null }>);
+    try {
+      localStorage.setItem('smart_work_timers_state', JSON.stringify(state.workTimers));
+    } catch (error) {
+      console.error('Failed to restore imported work timers:', error);
+    }
+  }, [state.workTimers]);
+
   // Persist workTimers to localStorage on changes
   useEffect(() => {
     try {
