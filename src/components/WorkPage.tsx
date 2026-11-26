@@ -586,12 +586,44 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // Selected work appears first, then other running works; all remaining
-  // works retain their existing order.
+  // Keep a recency order for every work, not only works with running timers.
+  // The most recently selected work is first; previously selected works follow
+  // in most-recently-used order, then untouched works retain their base order.
+  const [workActivityOrder, setWorkActivityOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('smart_work_activity_order');
+      return saved ? JSON.parse(saved).filter((id: string) => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const validIds = new Set(state.works.map((work) => work.id));
+    const cleaned = workActivityOrder.filter((id) => validIds.has(id));
+    if (cleaned.length !== workActivityOrder.length) setWorkActivityOrder(cleaned);
+    try {
+      localStorage.setItem('smart_work_activity_order', JSON.stringify(cleaned));
+    } catch (e) {
+      console.error('Failed to save work activity order:', e);
+    }
+  }, [workActivityOrder, state.works]);
+
+  const selectWork = (workId: string) => {
+    setSelectedWorkId(workId);
+    setWorkActivityOrder((previous) => [workId, ...previous.filter((id) => id !== workId)]);
+  };
+
+  const activityRank = new Map(workActivityOrder.map((id, index) => [id, index]));
   const orderedWorks = [...state.works].sort((a, b) => {
-    const priority = (workId: string) =>
-      workId === selectedWorkId ? 0 : workTimers[workId]?.isRunning ? 1 : 2;
-    return priority(a.id) - priority(b.id);
+    const rankA = activityRank.get(a.id);
+    const rankB = activityRank.get(b.id);
+    if (a.id === selectedWorkId) return -1;
+    if (b.id === selectedWorkId) return 1;
+    if (rankA !== undefined && rankB !== undefined) return rankA - rankB;
+    if (rankA !== undefined) return -1;
+    if (rankB !== undefined) return 1;
+    return state.works.indexOf(a) - state.works.indexOf(b);
   });
 
   // Combined outstanding balance across every work, independent of selection.
@@ -719,7 +751,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                 type="button"
                 aria-pressed={isSelected}
                 aria-label={isRTL ? `اختيار العمل ${w.name}` : `Select work ${w.name}`}
-                onClick={() => setSelectedWorkId(w.id)}
+                onClick={() => selectWork(w.id)}
                 className={`flex items-center gap-2 rounded-2xl border px-3.5 py-2 transition-all whitespace-nowrap text-xs font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                   isSelected
                     ? 'border-purple-500 bg-purple-600 text-white shadow-lg shadow-purple-600/30'
