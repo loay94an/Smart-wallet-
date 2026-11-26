@@ -30,7 +30,7 @@ interface SettingsModalProps {
   language: 'ar' | 'en';
 }
 
-const normalizeTheme = (value?: string) => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' }[value || ''] || value || 'mono');
+const normalizeTheme = (value?: string): string => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' } as Record<string, string>)[value || ''] || value || 'mono';
 
 const THEME_OPTIONS = [
   { id: 'mono', nameAr: 'أحادي', nameEn: 'Monochrome', color: '#27272a', secondary: '#a1a1aa' },
