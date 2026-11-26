@@ -462,6 +462,11 @@ export const exportService = {
     const debts = state.debts;
     const payments = state.payments;
     const items = [
+      ...state.people.map((person) => ({
+        title: `${isRTL ? 'بيانات الشخص' : 'Person details'}: ${person.name}`,
+        subtitle: `${isRTL ? 'الهاتف' : 'Phone'}: ${person.phone || '-'} • ${isRTL ? 'البريد' : 'Email'}: ${person.email || '-'} • ${isRTL ? 'ملاحظات' : 'Notes'}: ${person.notes || '-'}`,
+        amount: '-',
+      })),
       ...debts.map((debt) => {
         const person = peopleMap.get(debt.personId);
         const paid = payments.filter((payment) => payment.debtId === debt.id).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
@@ -508,6 +513,11 @@ export const exportService = {
     const cur = state.settings.currency || 'ر.س';
     const workMap = new Map(state.works.map((work) => [work.id, work]));
     const items = [
+      ...state.works.map((work) => ({
+        title: `${isRTL ? 'بيانات العمل' : 'Work details'}: ${work.name}`,
+        subtitle: `${isRTL ? 'العميل' : 'Client'}: ${work.client || '-'} • ${isRTL ? 'الحالة' : 'Status'}: ${work.status} • ${isRTL ? 'البداية' : 'Start'}: ${work.startDate || '-'} • ${isRTL ? 'النهاية' : 'End'}: ${work.endDate || '-'} • ${work.desc || ''}`,
+        amount: `${formatCurrency(work.rate, cur)} / ${work.unitName}`,
+      })),
       ...state.workLogs.map((log) => {
         const work = workMap.get(log.workId);
         const piece = work?.calculationType === 'piece';
@@ -588,6 +598,10 @@ export const exportService = {
       state,
       items,
       [
+        { label: isRTL ? 'الشخص' : 'Person', value: person.name },
+        { label: isRTL ? 'الهاتف' : 'Phone', value: person.phone || '-' },
+        { label: isRTL ? 'البريد الإلكتروني' : 'Email', value: person.email || '-' },
+        { label: isRTL ? 'ملاحظات' : 'Notes', value: person.notes || '-' },
         { label: isRTL ? 'رقم الديون عليك' : 'Debt principal', value: formatCurrency(totalDebt, cur) },
         { label: isRTL ? 'إجمالي المستحقات لك' : 'Receivable principal', value: formatCurrency(totalReceivable, cur) },
         { label: isRTL ? 'المدفوع عن الديون' : 'Debt payments', value: formatCurrency(paidDebt, cur) },
