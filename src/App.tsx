@@ -93,11 +93,33 @@ export default function App() {
     initApp();
   }, []);
 
-  // Sync to IndexedDB whenever state changes
+  // Persist changes without serializing large wallet data on every keystroke.
+  // Flush immediately when Android backgrounds the WebView or the page is being closed.
   useEffect(() => {
-    if (isLoaded && hasLoadedState) {
-      dbService.saveState(state).catch((err) => console.error('تعذر حفظ بيانات المحفظة:', err));
-    }
+    if (!isLoaded || !hasLoadedState) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const persist = () => {
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      dbService.saveState(state).catch((err) => {
+        console.error('تعذر حفظ بيانات المحفظة:', err);
+      });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') persist();
+    };
+    const onPageHide = () => persist();
+
+    timer = setTimeout(persist, 650);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
+    };
   }, [state, isLoaded, hasLoadedState]);
 
   // Apply the selected color palette and light/dark appearance.
