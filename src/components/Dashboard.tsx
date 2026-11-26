@@ -307,6 +307,33 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
+      {/* Quick navigation: keep the most-used areas one tap away. */}
+      <section className="space-y-3">
+        <h3 className="px-1 text-sm font-extrabold text-[var(--text-primary)]">{isRTL ? 'وصول سريع' : 'Quick access'}</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <button type="button" onClick={onOpenAddPerson} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
+            <Users className="h-5 w-5 text-[var(--accent)]" />
+            <span>{isRTL ? 'الأشخاص والديون' : 'People & debts'}</span>
+          </button>
+          <button type="button" onClick={onOpenAddWork} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
+            <Briefcase className="h-5 w-5 text-[var(--accent)]" />
+            <span>{isRTL ? 'الأعمال' : 'Work'}</span>
+          </button>
+          <button type="button" onClick={() => onNavigate('info')} className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3 text-center text-xs font-bold text-[var(--text-primary)] shadow-sm active:scale-[0.98]">
+            <PieChart className="h-5 w-5 text-[var(--accent)]" />
+            <span>{isRTL ? 'الميزانية والادخار' : 'Budget & savings'}</span>
+          </button>
+        </div>
+      </section>
+
+      <details className="overflow-hidden rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] shadow-sm">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-extrabold text-[var(--text-primary)] marker:hidden">
+          <span className="flex items-center justify-between gap-3">
+            <span>{isRTL ? 'التحليلات والتفاصيل' : 'Analytics & details'}</span>
+            <ChevronDown className="h-4 w-4 text-[var(--text-secondary)]" />
+          </span>
+        </summary>
+        <div className="space-y-4 border-t border-[var(--border-neutral)] p-3 sm:p-4">
       {/* Smart Circle Section (Donut Chart) */}
       <div className="rounded-3xl border border-purple-500/30 bg-[#14142d] p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
@@ -461,6 +488,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
           )}
         </div>
       </div>
+
+        </div>
+      </details>
 
       {/* Recent Activity */}
       <div className="rounded-3xl border border-purple-500/20 bg-[#14142d] p-5 shadow-lg">
