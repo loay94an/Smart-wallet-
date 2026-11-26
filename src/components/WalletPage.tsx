@@ -303,6 +303,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                     type="button"
                     onClick={() => {
                       setIsOptionsMenuOpen(false);
+                      setReturnToTxAfterCategory(false);
                       setIsCatModalOpen(true);
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-purple-200 hover:bg-purple-900/40 rounded-xl transition-all"
@@ -838,7 +839,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
               </h3>
               <button
                 type="button"
-                onClick={() => setIsCatModalOpen(false)}
+                onClick={() => { setIsCatModalOpen(false); setReturnToTxAfterCategory(false); }}
                 className="text-purple-400 hover:text-white"
               >
                 <X className="h-5 w-5" />
@@ -870,6 +871,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                         type="button"
                         onClick={() => {
                           setIsCatModalOpen(false);
+                          setReturnToTxAfterCategory(false);
                           onPromptBudget(c.id);
                         }}
                         className="rounded px-2 py-0.5 text-[10px] font-bold text-cyan-400 hover:bg-cyan-950/40 border border-cyan-800/40"
