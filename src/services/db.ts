@@ -177,12 +177,8 @@ class IndexedDBStorage {
           transaction.onabort = () => reject(transaction.error || new Error('IndexedDB write aborted'));
         });
       }
-      // Keep a compatibility mirror only after the primary write succeeds.
-      try {
-        localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(snapshot));
-      } catch (error) {
-        console.warn('Local storage mirror unavailable:', error);
-      }
+      // Do not serialize the full wallet into synchronous localStorage on every save.
+      // IndexedDB is the primary durable store; localStorage remains read-only for legacy migration.
     };
     this.saveQueue = this.saveQueue.then(write, write);
     return this.saveQueue;
