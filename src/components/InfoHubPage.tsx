@@ -252,14 +252,21 @@ export const InfoHubPage: React.FC<InfoHubPageProps> = ({
                   type="button"
                   onClick={() => {
                     setIsExportMenuOpen(false);
-                    const budgetItems = state.budgets.map((b) => {
-                      const spent = getMonthlySpentForCat(b.categoryId);
-                      return {
-                        title: b.categoryName,
-                        subtitle: `${isRTL ? 'المصروف' : 'Spent'}: ${formatCurrency(spent, cur)}`,
-                        amount: formatCurrency(b.amount, cur),
-                      };
-                    });
+                    const budgetItems = [
+                      ...state.budgets.map((b) => {
+                        const spent = getMonthlySpentForCat(b.categoryId);
+                        return {
+                          title: b.categoryName,
+                          subtitle: `${isRTL ? 'المصروف' : 'Spent'}: ${formatCurrency(spent, cur)}`,
+                          amount: formatCurrency(b.amount, cur),
+                        };
+                      }),
+                      ...state.financialGoals.map((goal) => ({
+                        title: `${isRTL ? 'هدف ادخار' : 'Savings goal'}: ${goal.name}`,
+                        subtitle: `${isRTL ? 'الموعد المستهدف' : 'Target date'}: ${goal.deadline || '-'}`,
+                        amount: `${formatCurrency(goal.savedAmount || 0, cur)} / ${formatCurrency(goal.target, cur)}`,
+                      })),
+                    ];
                     exportService.exportSectionReportPDF(
                       isRTL ? 'تقرير الميزانيات والأهداف' : 'Budgets & Financial Goals',
                       state,

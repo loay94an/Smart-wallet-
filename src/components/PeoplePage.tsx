@@ -380,7 +380,7 @@ export const PeoplePage: React.FC<PeoplePageProps> = ({
                         type="button"
                         onClick={() => {
                           setIsPersonOptionsOpen(false);
-                          exportService.exportPeopleToExcel(state, isRTL);
+                          exportService.exportPeopleToExcel(state, isRTL, selectedPerson.id);
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-green-300 hover:bg-green-950/40 rounded-xl transition-all"
                       >
@@ -392,28 +392,7 @@ export const PeoplePage: React.FC<PeoplePageProps> = ({
                         type="button"
                         onClick={() => {
                           setIsPersonOptionsOpen(false);
-                          const personDebts = state.debts.filter((d) => d.personId === selectedPerson.id);
-                          const items = personDebts.map((d) => {
-                            const pmtSum = state.payments.filter((p) => p.debtId === d.id).reduce((s, p) => s + Number(p.amount), 0);
-                            const rem = Math.max(0, Number(d.amount) - pmtSum);
-                            return {
-                              title: d.desc,
-                              subtitle: `${d.type === 'debt' ? (isRTL ? 'دين عليك' : 'Debt') : (isRTL ? 'مستحق لك' : 'Receivable')} • ${new Date(d.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}`,
-                              amount: `${isRTL ? 'المتبقي' : 'Left'}: ${formatCurrency(rem, cur)} / ${formatCurrency(d.amount, cur)}`,
-                            };
-                          });
-
-                          exportService.exportSectionReportPDF(
-                            `${isRTL ? 'كشف حساب:' : 'Statement for:'} ${selectedPerson.name}`,
-                            state,
-                            items,
-                            [
-                              { label: isRTL ? 'ديون عليك له' : 'You Owe', value: formatCurrency(selectedPersonRep.remainingDebt, cur) },
-                              { label: isRTL ? 'مستحقات لك منه' : 'He Owes You', value: formatCurrency(selectedPersonRep.remainingReceivable, cur) },
-                              { label: isRTL ? 'الصافي العام' : 'Net Balance', value: formatCurrency(selectedPersonRep.net, cur) },
-                            ],
-                            isRTL
-                          );
+                          void exportService.exportPersonReportPDF(state, selectedPerson.id, isRTL);
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-purple-200 hover:bg-purple-900/40 rounded-xl transition-all"
                       >
@@ -755,26 +734,7 @@ export const PeoplePage: React.FC<PeoplePageProps> = ({
                         type="button"
                         onClick={() => {
                           setIsOverallOptionsOpen(false);
-                          const items = state.people.map((p) => {
-                            const rep = getPersonReport(p.id);
-                            return {
-                              title: p.name,
-                              subtitle: p.phone || p.email || (isRTL ? 'لا توجد بيانات اتصال' : 'No contact info'),
-                              amount: formatCurrency(rep.net, cur),
-                              extra: rep.statusText,
-                            };
-                          });
-                          exportService.exportSectionReportPDF(
-                            isRTL ? 'تقرير الحسابات والديون' : 'Debts & Accounts Report',
-                            state,
-                            items,
-                            [
-                              { label: isRTL ? 'إجمالي الديون عليك' : 'Total Debts You Owe', value: formatCurrency(summary.allDebts, cur) },
-                              { label: isRTL ? 'إجمالي المستحقات لك' : 'Total Receivables', value: formatCurrency(summary.allReceivables, cur) },
-                              { label: isRTL ? 'الصافي العام' : 'Net Total', value: formatCurrency(summary.net, cur) },
-                            ],
-                            isRTL
-                          );
+                          void exportService.exportPeopleReportPDF(state, isRTL);
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-purple-200 hover:bg-purple-900/40 rounded-xl transition-all"
                       >

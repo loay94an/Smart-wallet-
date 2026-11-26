@@ -319,16 +319,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                     onClick={() => {
                       setIsOptionsMenuOpen(false);
                       const catMap = new Map(state.categories.map((c) => [c.id, c.name]));
-                      const items = filteredTransactions.slice(0, 50).map((t) => ({
+                      const items = state.transactions.map((t) => ({
                         title: t.desc || catMap.get(t.category) || t.category,
                         subtitle: `${catMap.get(t.category) || ''} • ${new Date(t.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}`,
                         amount: (t.type === 'income' ? '+' : '-') + formatCurrency(t.amount, cur),
                       }));
 
-                      const totalInc = filteredTransactions
+                      const totalInc = state.transactions
                         .filter((t) => t.type === 'income')
                         .reduce((s, t) => s + Number(t.amount), 0);
-                      const totalExp = filteredTransactions
+                      const totalExp = state.transactions
                         .filter((t) => t.type === 'expense')
                         .reduce((s, t) => s + Number(t.amount), 0);
 

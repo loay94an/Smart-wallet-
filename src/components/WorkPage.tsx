@@ -11,7 +11,6 @@ import { formatCurrency } from '../services/i18n';
 import { ConfirmModal } from './ConfirmModal';
 import { exportService } from '../services/exportService';
 import { saveExportBlob } from '../services/fileExport';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
   Briefcase,
@@ -442,21 +441,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const totalReceived = activePayments.reduce((s, p) => s + Number(p.amount), 0);
   const netDueRemaining = totalGrossEarned - totalReceived;
 
-  // Aggregate outstanding dues across every work item, not just the selected one.
-  const allWorksGrossEarned = state.workLogs.reduce((total, log) => {
-    const work = state.works.find((item) => item.id === log.workId);
-    if (!work) return total;
-    const units = work.calculationType === 'piece'
-      ? Number(log.quantity || 0)
-      : Number(log.hours || 0);
-    return total + units * Number(work.rate || 0);
-  }, 0);
-  const allWorksPaymentsReceived = state.workPayments.reduce(
-    (total, payment) => total + Number(payment.amount || 0),
-    0
-  );
-  const allWorksNetDueRemaining = allWorksGrossEarned - allWorksPaymentsReceived;
-
   const remainingWorkUnits = activeWork && activeWork.rate > 0 ? netDueRemaining / activeWork.rate : 0;
 
   // Productivity metrics
@@ -556,20 +540,21 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
 
   const exportPDF = async () => {
-    if (!activeWork || !reportRef.current) return;
+    if (!activeWork) return;
     setIsExportingPDF(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      await saveExportBlob(pdf.output('blob'), `work-report-${activeWork.name}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      await exportService.exportWorkReportPDF(state, activeWork.id, isRTL);
+    } catch (e) {
+      console.error('PDF export error:', e);
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+  const exportAllWorksPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await exportService.exportAllWorksReportPDF(state, isRTL);
     } catch (e) {
       console.error('PDF export error:', e);
     } finally {
@@ -614,12 +599,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             {isRTL ? 'حساب بالساعة أو بالقطعة، مؤقت ذكي، وسجل الدفعات' : 'Hourly/piece rates, timer and salary logs'}
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
-            <span className="text-[10px] text-[var(--text-secondary)]">{isRTL ? 'الصافي المتبقي لجميع الأعمال' : 'Net outstanding across all work'}</span>
-            <strong className={`text-sm font-black ${allWorksNetDueRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {formatCurrency(allWorksNetDueRemaining, cur)}
-            </strong>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -667,7 +646,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      exportPDF();
+                      exportAllWorksPDF();
                       setIsExportMenuOpen(false);
                     }}
                     disabled={isExportingPDF}
@@ -682,75 +661,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Active Multi-Timers Summary Bar (shows when any timers are running concurrently) */}
-      {(() => {
-        const running = state.works.filter((w) => workTimers[w.id]?.isRunning);
-        if (running.length === 0) return null;
-        return (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3 shadow-lg animate-fadeIn">
-            <div className="flex items-center justify-between mb-2">
-              <span className="flex items-center gap-2 text-xs font-black text-emerald-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>
-                  {isRTL
-                    ? `المؤقتات النشطة المتزامنة (${running.length} ${running.length > 1 ? 'مشاريع تعمل معاً' : 'مشروع يعمل'})`
-                    : `Simultaneous Active Timers (${running.length} running)`}
-                </span>
-              </span>
-              <span className="text-[10px] text-emerald-300/70 font-bold">
-                {isRTL ? 'تعمل في الخلفية معاً' : 'Running concurrently'}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {running.map((w) => {
-                const t = workTimers[w.id];
-                const isCurrent = w.id === selectedWorkId;
-                return (
-                  <div
-                    key={w.id}
-                    onClick={() => setSelectedWorkId(w.id)}
-                    className={`flex items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border ${
-                      isCurrent
-                        ? 'border-emerald-400 bg-emerald-600/30 text-white shadow-sm'
-                        : 'border-emerald-800/40 bg-[#161f30] text-emerald-300 hover:border-emerald-600'
-                    }`}
-                  >
-                    <span>{w.name}:</span>
-                    <span className="font-mono font-black text-emerald-400">{formatTimer(t?.seconds || 0)}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        pauseTimer(w.id);
-                      }}
-                      title={isRTL ? 'إيقاف مؤقت' : 'Pause'}
-                      className="p-1 text-amber-300 hover:text-white rounded hover:bg-amber-500/20"
-                    >
-                      <Pause className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        stopAndSaveTimer(w.id, w);
-                      }}
-                      title={isRTL ? 'إنهاء وحفظ' : 'Stop & Save'}
-                      className="p-1 text-red-400 hover:text-white rounded hover:bg-red-500/20"
-                    >
-                      <Square className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Work Tabs */}
       {state.works.length > 0 && (
@@ -789,6 +699,30 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         </div>
       )}
 
+      {/* Selected work outstanding balance — shown directly after work selection */}
+      {activeWork && (
+        <div className="rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 p-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-purple-300 block">
+                {isRTL ? '💰 الصافي المتبقي للعمل المحدد' : 'Selected Work Net Remaining'}
+              </span>
+              <div className="text-2xl font-black text-emerald-400 mt-0.5">
+                {formatCurrency(netDueRemaining, cur)}
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-purple-300 block">
+                {isPiece ? (isRTL ? 'القطع المتبقية' : 'Pieces Left') : (isRTL ? 'الساعات المتبقية' : 'Hours Left')}
+              </span>
+              <div className="text-base font-extrabold text-white">
+                {Math.max(0, remainingWorkUnits).toFixed(1)} {unitLabel}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Active Work Panel */}
       {activeWork ? (
         <div className="space-y-5" ref={reportRef}>
@@ -803,7 +737,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-purple-400" />
                     <span className="text-xs font-black text-white">
-                      {isRTL ? 'المؤقت الذكي وجلسات الإنجاز (مستقل لكل مشروع)' : 'Smart Timer & Session (Independent)'}
+                      {isRTL ? 'مؤقت عمل' : 'Work Timer'}
                     </span>
                   </div>
                   <span className="rounded-full bg-purple-900/40 px-2 py-0.5 text-[10px] font-bold text-purple-300 border border-purple-700/30">
@@ -1052,7 +986,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        exportService.exportWorkToExcel(state, isRTL);
+                        exportService.exportWorkToExcel(state, isRTL, activeWork.id);
                         setIsProjectMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-green-300 hover:bg-green-950/40 rounded-xl transition-all"
@@ -1109,28 +1043,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Simplified Net Summary Card */}
-          <div className="rounded-2xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-pink-950/30 p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block">
-                  {isRTL ? '💰 الصافي المتبقي من المستحقات' : 'Net Remaining Balance'}
-                </span>
-                <div className="text-2xl font-black text-emerald-400 mt-0.5">
-                  {formatCurrency(netDueRemaining, cur)}
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold text-purple-300 block">
-                  {isPiece ? (isRTL ? 'القطع المتبقية' : 'Pieces Left') : (isRTL ? 'الساعات المتبقية' : 'Hours Left')}
-                </span>
-                <div className="text-base font-extrabold text-white">
-                  {Math.max(0, remainingWorkUnits).toFixed(1)} {unitLabel}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1478,6 +1390,75 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           <p>{isRTL ? 'لا توجد مشاريع مضافة حتى الآن' : 'No projects added yet'}</p>
         </div>
       )}
+
+      {/* Active Multi-Timers Summary Bar (shows when any timers are running concurrently) */}
+      {(() => {
+        const running = state.works.filter((w) => workTimers[w.id]?.isRunning);
+        if (running.length === 0) return null;
+        return (
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3 shadow-lg animate-fadeIn">
+            <div className="flex items-center justify-between mb-2">
+              <span className="flex items-center gap-2 text-xs font-black text-emerald-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>
+                  {isRTL
+                    ? `المؤقتات النشطة المتزامنة (${running.length} ${running.length > 1 ? 'مشاريع تعمل معاً' : 'مشروع يعمل'})`
+                    : `Simultaneous Active Timers (${running.length} running)`}
+                </span>
+              </span>
+              <span className="text-[10px] text-emerald-300/70 font-bold">
+                {isRTL ? 'تعمل في الخلفية معاً' : 'Running concurrently'}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {running.map((w) => {
+                const t = workTimers[w.id];
+                const isCurrent = w.id === selectedWorkId;
+                return (
+                  <div
+                    key={w.id}
+                    onClick={() => setSelectedWorkId(w.id)}
+                    className={`flex items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border ${
+                      isCurrent
+                        ? 'border-emerald-400 bg-emerald-600/30 text-white shadow-sm'
+                        : 'border-emerald-800/40 bg-[#161f30] text-emerald-300 hover:border-emerald-600'
+                    }`}
+                  >
+                    <span>{w.name}:</span>
+                    <span className="font-mono font-black text-emerald-400">{formatTimer(t?.seconds || 0)}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        pauseTimer(w.id);
+                      }}
+                      title={isRTL ? 'إيقاف مؤقت' : 'Pause'}
+                      className="p-1 text-amber-300 hover:text-white rounded hover:bg-amber-500/20"
+                    >
+                      <Pause className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        stopAndSaveTimer(w.id, w);
+                      }}
+                      title={isRTL ? 'إنهاء وحفظ' : 'Stop & Save'}
+                      className="p-1 text-red-400 hover:text-white rounded hover:bg-red-500/20"
+                    >
+                      <Square className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Add / Edit Project Modal */}
       {isWorkModalOpen && (

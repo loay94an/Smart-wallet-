@@ -41,12 +41,17 @@ export const exportService = {
   /**
    * Export People & Debts to Excel (.xlsx)
    */
-  exportPeopleToExcel: (state: AppState, isRTL: boolean = true) => {
+  exportPeopleToExcel: (state: AppState, isRTL: boolean = true, personId?: string) => {
     const cur = state.settings.currency || 'ر.س';
+    const people = personId ? state.people.filter((p) => p.id === personId) : state.people;
+    const personIds = new Set(people.map((p) => p.id));
+    const debts = state.debts.filter((d) => personIds.has(d.personId));
+    const debtIds = new Set(debts.map((d) => d.id));
+    const payments = state.payments.filter((p) => debtIds.has(p.debtId));
     const peopleMap = new Map(state.people.map((p) => [p.id, p]));
 
     // Sheet 1: People Summary
-    const peopleSummaryRows = state.people.map((p, idx) => {
+    const peopleSummaryRows = people.map((p, idx) => {
       const pDebts = state.debts.filter((d) => d.personId === p.id);
       const totalDebt = pDebts.filter((d) => d.type === 'debt').reduce((s, d) => s + Number(d.amount), 0);
       const totalReceivable = pDebts.filter((d) => d.type === 'receivable').reduce((s, d) => s + Number(d.amount), 0);
@@ -81,7 +86,7 @@ export const exportService = {
     });
 
     // Sheet 2: All Debts Log
-    const debtDetailsRows = state.debts.map((d, idx) => {
+    const debtDetailsRows = debts.map((d, idx) => {
       const p = peopleMap.get(d.personId);
       const paid = state.payments
         .filter((pm) => pm.debtId === d.id)
@@ -101,6 +106,20 @@ export const exportService = {
       };
     });
 
+    const paymentRows = payments.map((payment, idx) => {
+      const debt = debts.find((d) => d.id === payment.debtId);
+      const person = debt ? peopleMap.get(debt.personId) : undefined;
+      return {
+        [isRTL ? 'م' : 'No']: idx + 1,
+        [isRTL ? 'الشخص' : 'Person']: person?.name || '',
+        [isRTL ? 'بيان الدين' : 'Debt Description']: debt?.desc || '',
+        [isRTL ? `مبلغ الدفعة (${cur})` : `Payment (${cur})`]: Number(payment.amount),
+        [isRTL ? 'تاريخ الدفعة' : 'Payment Date']: payment.date ? payment.date.slice(0, 10) : '',
+        [isRTL ? 'طريقة الدفع' : 'Method']: payment.method,
+        [isRTL ? 'ملاحظات' : 'Notes']: payment.notes || '',
+      };
+    });
+
     const workbook = XLSX.utils.book_new();
     const ws1 = XLSX.utils.json_to_sheet(
       peopleSummaryRows.length > 0
@@ -114,19 +133,26 @@ export const exportService = {
     );
 
     XLSX.utils.book_append_sheet(workbook, ws1, isRTL ? 'كشف الأشخاص' : 'People Summary');
+    const ws3 = XLSX.utils.json_to_sheet(paymentRows.length > 0 ? paymentRows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد دفعات مسجلة' : 'No payments recorded' }]);
     XLSX.utils.book_append_sheet(workbook, ws2, isRTL ? 'سجلات الديون والمستحقات' : 'Debts Log');
-    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `debts-people-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, ws3, isRTL ? 'سجل الدفعات' : 'Payments');
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${personId ? 'person-account' : 'debts-people-report'}-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
    * Export Work & Projects to Excel (.xlsx)
    */
-  exportWorkToExcel: (state: AppState, isRTL: boolean = true) => {
+  exportWorkToExcel: (state: AppState, isRTL: boolean = true, workId?: string) => {
     const cur = state.settings.currency || 'ر.س';
+    const works = workId ? state.works.filter((w) => w.id === workId) : state.works;
+    const workIds = new Set(works.map((w) => w.id));
+    const workLogs = state.workLogs.filter((log) => workIds.has(log.workId));
+    const workPayments = state.workPayments.filter((payment) => workIds.has(payment.workId));
+    const workGoals = state.workGoals.filter((goal) => workIds.has(goal.workId));
     const workMap = new Map(state.works.map((w) => [w.id, w]));
 
     // Sheet 1: Projects Overview
-    const projectRows = state.works.map((w, idx) => {
+    const projectRows = works.map((w, idx) => {
       const logs = state.workLogs.filter((l) => l.workId === w.id);
       const payments = state.workPayments.filter((p) => p.workId === w.id);
       const isPiece = w.calculationType === 'piece';
@@ -149,11 +175,14 @@ export const exportService = {
         [isRTL ? `المقبوض (${cur})` : `Received (${cur})`]: received,
         [isRTL ? `المتبقي بذمة العميل (${cur})` : `Due Balance (${cur})`]: remaining,
         [isRTL ? 'الحالة' : 'Status']: w.status,
+        [isRTL ? 'تاريخ البداية' : 'Start date']: w.startDate || '',
+        [isRTL ? 'تاريخ النهاية' : 'End date']: w.endDate || '',
+        [isRTL ? 'الوصف' : 'Description']: w.desc || '',
       };
     });
 
     // Sheet 2: Work Logs
-    const logRows = state.workLogs.map((l, idx) => {
+    const logRows = workLogs.map((l, idx) => {
       const w = workMap.get(l.workId);
       const isPiece = w?.calculationType === 'piece';
       const earned = (isPiece ? Number(l.quantity || 0) : Number(l.hours || 0)) * (w ? Number(w.rate) : 0);
@@ -162,6 +191,8 @@ export const exportService = {
         [isRTL ? 'م' : 'No']: idx + 1,
         [isRTL ? 'المشروع' : 'Project']: w?.name || (isRTL ? 'غير معروف' : 'Unknown'),
         [isRTL ? 'التاريخ' : 'Date']: l.date,
+        [isRTL ? 'وقت البداية' : 'Start time']: l.start || '',
+        [isRTL ? 'وقت النهاية' : 'End time']: l.end || '',
         [isRTL ? 'الساعات' : 'Hours']: Number(l.hours || 0),
         [isRTL ? 'الكمية المنجزة' : 'Quantity']: Number(l.quantity || 0),
         [isRTL ? `المبلغ المستحق (${cur})` : `Earned (${cur})`]: earned,
@@ -170,7 +201,7 @@ export const exportService = {
     });
 
     // Sheet 3: Work Payments
-    const paymentRows = state.workPayments.map((p, idx) => {
+    const paymentRows = workPayments.map((p, idx) => {
       const w = workMap.get(p.workId);
       return {
         [isRTL ? 'م' : 'No']: idx + 1,
@@ -181,19 +212,29 @@ export const exportService = {
           p.type === 'salary' ? (isRTL ? 'راتب' : 'Salary') : p.type === 'bonus' ? (isRTL ? 'مكافأة' : 'Bonus') : (isRTL ? 'دفعة' : 'Payment'),
         [isRTL ? 'طريقة الدفع' : 'Method']: p.method,
         [isRTL ? 'البيان' : 'Description']: p.desc || '',
+        [isRTL ? 'وقت التسجيل' : 'Created at']: p.createdAt || '',
       };
     });
+
+    const goalRows = workGoals.map((goal, idx) => ({
+      [isRTL ? 'م' : 'No']: idx + 1,
+      [isRTL ? 'المشروع' : 'Project']: workMap.get(goal.workId)?.name || '',
+      [isRTL ? 'الفترة' : 'Frequency']: goal.type,
+      [isRTL ? 'الهدف' : 'Target']: Number(goal.target),
+    }));
 
     const workbook = XLSX.utils.book_new();
     const ws1 = XLSX.utils.json_to_sheet(projectRows.length > 0 ? projectRows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد مشاريع' : 'No projects' }]);
     const ws2 = XLSX.utils.json_to_sheet(logRows.length > 0 ? logRows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد سجلات إنجاز' : 'No logs' }]);
     const ws3 = XLSX.utils.json_to_sheet(paymentRows.length > 0 ? paymentRows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد دفعات مقبوضة' : 'No payments' }]);
+    const ws4 = XLSX.utils.json_to_sheet(goalRows.length > 0 ? goalRows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد أهداف عمل' : 'No work goals' }]);
 
     XLSX.utils.book_append_sheet(workbook, ws1, isRTL ? 'المشاريع والأعمال' : 'Projects');
     XLSX.utils.book_append_sheet(workbook, ws2, isRTL ? 'سجلات الإنجاز' : 'Work Logs');
     XLSX.utils.book_append_sheet(workbook, ws3, isRTL ? 'الدفعات المقبوضة' : 'Work Payments');
+    XLSX.utils.book_append_sheet(workbook, ws4, isRTL ? 'أهداف العمل' : 'Work Goals');
 
-    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `work-freelance-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${workId ? 'work-account' : 'work-freelance-report'}-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -202,11 +243,18 @@ export const exportService = {
   exportBudgetsToExcel: (state: AppState, isRTL: boolean = true) => {
     const cur = state.settings.currency || 'ر.س';
 
-    const budgetRows = state.budgets.map((b, idx) => ({
-      [isRTL ? 'م' : 'No']: idx + 1,
-      [isRTL ? 'التصنيف' : 'Category']: b.categoryName,
-      [isRTL ? `الميزانية المحددة (${cur})` : `Allocated Budget (${cur})`]: Number(b.amount),
-    }));
+    const budgetRows = state.budgets.map((b, idx) => {
+      const spent = state.transactions
+        .filter((tx) => tx.type === 'expense' && tx.category === b.categoryId)
+        .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+      return {
+        [isRTL ? 'م' : 'No']: idx + 1,
+        [isRTL ? 'التصنيف' : 'Category']: b.categoryName,
+        [isRTL ? `الميزانية المحددة (${cur})` : `Allocated Budget (${cur})`]: Number(b.amount),
+        [isRTL ? `المصروف الفعلي (${cur})` : `Actual Spent (${cur})`]: spent,
+        [isRTL ? `المتبقي من الميزانية (${cur})` : `Budget Remaining (${cur})`]: Number(b.amount) - spent,
+      };
+    });
 
     const goalRows = state.financialGoals.map((g, idx) => {
       const remaining = Math.max(0, Number(g.target) - Number(g.savedAmount || 0));
@@ -403,6 +451,217 @@ export const exportService = {
       console.error('PDF export error:', e);
       return false;
     }
+  },
+
+  /**
+   * Export the complete people section, including all people, debts and individual payments.
+   */
+  exportPeopleReportPDF: async (state: AppState, isRTL: boolean = true) => {
+    const cur = state.settings.currency || 'ر.س';
+    const peopleMap = new Map(state.people.map((person) => [person.id, person]));
+    const debts = state.debts;
+    const payments = state.payments;
+    const items = [
+      ...state.people.map((person) => ({
+        title: `${isRTL ? 'بيانات الشخص' : 'Person details'}: ${person.name}`,
+        subtitle: `${isRTL ? 'الهاتف' : 'Phone'}: ${person.phone || '-'} • ${isRTL ? 'البريد' : 'Email'}: ${person.email || '-'} • ${isRTL ? 'ملاحظات' : 'Notes'}: ${person.notes || '-'}`,
+        amount: '-',
+      })),
+      ...debts.map((debt) => {
+        const person = peopleMap.get(debt.personId);
+        const paid = payments.filter((payment) => payment.debtId === debt.id).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        return {
+          title: `${person?.name || (isRTL ? 'شخص غير معروف' : 'Unknown person')} • ${debt.type === 'debt' ? (isRTL ? 'دين عليك' : 'Debt you owe') : (isRTL ? 'مستحق لك' : 'Receivable')}: ${debt.desc}`,
+          subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${debt.date} • ${isRTL ? 'الأصل' : 'Original'}: ${formatCurrency(debt.amount, cur)} • ${isRTL ? 'المدفوع' : 'Paid'}: ${formatCurrency(paid, cur)} • ${isRTL ? 'المتبقي' : 'Remaining'}: ${formatCurrency(Number(debt.amount) - paid, cur)}`,
+          amount: formatCurrency(debt.amount, cur),
+        };
+      }),
+      ...payments.map((payment) => {
+        const debt = debts.find((item) => item.id === payment.debtId);
+        const person = debt ? peopleMap.get(debt.personId) : undefined;
+        return {
+          title: `${person?.name || ''} • ${isRTL ? 'دفعة' : 'Payment'}: ${debt?.desc || ''}`,
+          subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${payment.date} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method} • ${payment.notes || ''}`,
+          amount: formatCurrency(payment.amount, cur),
+        };
+      }),
+    ];
+    const totalDebt = debts.filter((debt) => debt.type === 'debt').reduce((sum, debt) => sum + Number(debt.amount || 0), 0);
+    const totalReceivable = debts.filter((debt) => debt.type === 'receivable').reduce((sum, debt) => sum + Number(debt.amount || 0), 0);
+    const paidDebt = payments.filter((payment) => debts.some((debt) => debt.id === payment.debtId && debt.type === 'debt')).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const paidReceivable = payments.filter((payment) => debts.some((debt) => debt.id === payment.debtId && debt.type === 'receivable')).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    return exportService.exportSectionReportPDF(
+      isRTL ? 'التقرير الشامل للأشخاص والديون والدفعات' : 'Complete People, Debts & Payments Report',
+      state,
+      items,
+      [
+        { label: isRTL ? 'عدد الأشخاص' : 'People', value: String(state.people.length) },
+        { label: isRTL ? 'عدد سجلات الديون' : 'Debt records', value: String(debts.length) },
+        { label: isRTL ? 'عدد الدفعات' : 'Payments', value: String(payments.length) },
+        { label: isRTL ? 'إجمالي الديون الأصلية' : 'Debt principal', value: formatCurrency(totalDebt, cur) },
+        { label: isRTL ? 'إجمالي المستحقات الأصلية' : 'Receivable principal', value: formatCurrency(totalReceivable, cur) },
+        { label: isRTL ? 'الصافي المتبقي' : 'Net remaining', value: formatCurrency((totalReceivable - paidReceivable) - (totalDebt - paidDebt), cur) },
+      ],
+      isRTL
+    );
+  },
+
+  /**
+   * Export the entire work section with all projects, logs, payments and goals.
+   */
+  exportAllWorksReportPDF: async (state: AppState, isRTL: boolean = true) => {
+    const cur = state.settings.currency || 'ر.س';
+    const workMap = new Map(state.works.map((work) => [work.id, work]));
+    const items = [
+      ...state.works.map((work) => ({
+        title: `${isRTL ? 'بيانات العمل' : 'Work details'}: ${work.name}`,
+        subtitle: `${isRTL ? 'العميل' : 'Client'}: ${work.client || '-'} • ${isRTL ? 'الحالة' : 'Status'}: ${work.status} • ${isRTL ? 'البداية' : 'Start'}: ${work.startDate || '-'} • ${isRTL ? 'النهاية' : 'End'}: ${work.endDate || '-'} • ${work.desc || ''}`,
+        amount: `${formatCurrency(work.rate, cur)} / ${work.unitName}`,
+      })),
+      ...state.workLogs.map((log) => {
+        const work = workMap.get(log.workId);
+        const piece = work?.calculationType === 'piece';
+        const earned = (piece ? Number(log.quantity || 0) : Number(log.hours || 0)) * Number(work?.rate || 0);
+        return {
+          title: `${work?.name || ''} • ${isRTL ? 'إنجاز' : 'Work log'}: ${log.desc || ''}`,
+          subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'من' : 'From'}: ${log.start || '-'} • ${isRTL ? 'إلى' : 'To'}: ${log.end || '-'} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
+          amount: formatCurrency(earned, cur),
+        };
+      }),
+      ...state.workPayments.map((payment) => ({
+        title: `${workMap.get(payment.workId)?.name || ''} • ${isRTL ? 'دفعة مستلمة' : 'Payment received'}`,
+        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${payment.date} • ${isRTL ? 'النوع' : 'Type'}: ${payment.type} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method} • ${payment.desc || ''}`,
+        amount: formatCurrency(payment.amount, cur),
+      })),
+      ...state.workGoals.map((goal) => ({
+        title: `${workMap.get(goal.workId)?.name || ''} • ${isRTL ? 'هدف العمل' : 'Work goal'}`,
+        subtitle: `${isRTL ? 'الفترة' : 'Frequency'}: ${goal.type}`,
+        amount: String(goal.target),
+      })),
+    ];
+    const gross = state.workLogs.reduce((sum, log) => {
+      const work = workMap.get(log.workId);
+      const units = work?.calculationType === 'piece' ? Number(log.quantity || 0) : Number(log.hours || 0);
+      return sum + units * Number(work?.rate || 0);
+    }, 0);
+    const received = state.workPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    return exportService.exportSectionReportPDF(
+      isRTL ? 'التقرير الشامل للأعمال والمشاريع' : 'Complete Work & Projects Report',
+      state,
+      items,
+      [
+        { label: isRTL ? 'عدد الأعمال' : 'Works', value: String(state.works.length) },
+        { label: isRTL ? 'سجلات الإنجاز' : 'Work logs', value: String(state.workLogs.length) },
+        { label: isRTL ? 'الدفعات' : 'Payments', value: String(state.workPayments.length) },
+        { label: isRTL ? 'إجمالي المستحق' : 'Gross earned', value: formatCurrency(gross, cur) },
+        { label: isRTL ? 'إجمالي المقبوض' : 'Total received', value: formatCurrency(received, cur) },
+        { label: isRTL ? 'الصافي المتبقي' : 'Net outstanding', value: formatCurrency(gross - received, cur) },
+      ],
+      isRTL
+    );
+  },
+
+  /**
+   * Export a complete person statement, including every debt and each linked payment.
+   */
+  exportPersonReportPDF: async (state: AppState, personId: string, isRTL: boolean = true) => {
+    const person = state.people.find((item) => item.id === personId);
+    if (!person) return false;
+    const debts = state.debts.filter((debt) => debt.personId === personId);
+    const debtIds = new Set(debts.map((debt) => debt.id));
+    const payments = state.payments.filter((payment) => debtIds.has(payment.debtId));
+    const totalDebt = debts.filter((debt) => debt.type === 'debt').reduce((sum, debt) => sum + Number(debt.amount || 0), 0);
+    const totalReceivable = debts.filter((debt) => debt.type === 'receivable').reduce((sum, debt) => sum + Number(debt.amount || 0), 0);
+    const paidDebt = payments.filter((payment) => debts.some((debt) => debt.id === payment.debtId && debt.type === 'debt')).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const paidReceivable = payments.filter((payment) => debts.some((debt) => debt.id === payment.debtId && debt.type === 'receivable')).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const cur = state.settings.currency || 'ر.س';
+    const items = [
+      ...debts.map((debt) => {
+        const paid = payments.filter((payment) => payment.debtId === debt.id).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        return {
+          title: `${debt.type === 'debt' ? (isRTL ? 'دين عليك' : 'Debt you owe') : (isRTL ? 'مستحق لك' : 'Receivable')}: ${debt.desc}`,
+          subtitle: `${isRTL ? 'تاريخ' : 'Date'}: ${debt.date} • ${isRTL ? 'الأصل' : 'Original'}: ${formatCurrency(debt.amount, cur)} • ${isRTL ? 'المدفوع' : 'Paid'}: ${formatCurrency(paid, cur)} • ${isRTL ? 'المتبقي' : 'Remaining'}: ${formatCurrency(Number(debt.amount) - paid, cur)}`,
+          amount: formatCurrency(debt.amount, cur),
+        };
+      }),
+      ...payments.map((payment) => {
+        const debt = debts.find((item) => item.id === payment.debtId);
+        return {
+          title: `${isRTL ? 'دفعة' : 'Payment'}: ${debt?.desc || ''}`,
+          subtitle: `${isRTL ? 'تاريخ الدفعة' : 'Payment date'}: ${payment.date} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method} • ${payment.notes || ''}`,
+          amount: formatCurrency(payment.amount, cur),
+        };
+      }),
+    ];
+    return exportService.exportSectionReportPDF(
+      `${isRTL ? 'كشف حساب الشخص' : 'Person Statement'}: ${person.name}`,
+      state,
+      items,
+      [
+        { label: isRTL ? 'الشخص' : 'Person', value: person.name },
+        { label: isRTL ? 'الهاتف' : 'Phone', value: person.phone || '-' },
+        { label: isRTL ? 'البريد الإلكتروني' : 'Email', value: person.email || '-' },
+        { label: isRTL ? 'ملاحظات' : 'Notes', value: person.notes || '-' },
+        { label: isRTL ? 'رقم الديون عليك' : 'Debt principal', value: formatCurrency(totalDebt, cur) },
+        { label: isRTL ? 'إجمالي المستحقات لك' : 'Receivable principal', value: formatCurrency(totalReceivable, cur) },
+        { label: isRTL ? 'المدفوع عن الديون' : 'Debt payments', value: formatCurrency(paidDebt, cur) },
+        { label: isRTL ? 'المحصّل من المستحقات' : 'Collected receivables', value: formatCurrency(paidReceivable, cur) },
+        { label: isRTL ? 'الصافي المتبقي' : 'Net remaining', value: formatCurrency((totalReceivable - paidReceivable) - (totalDebt - paidDebt), cur) },
+      ],
+      isRTL
+    );
+  },
+
+  /**
+   * Export a complete work statement with all logs, payments and goals for that work.
+   */
+  exportWorkReportPDF: async (state: AppState, workId: string, isRTL: boolean = true) => {
+    const work = state.works.find((item) => item.id === workId);
+    if (!work) return false;
+    const logs = state.workLogs.filter((log) => log.workId === workId);
+    const payments = state.workPayments.filter((payment) => payment.workId === workId);
+    const goals = state.workGoals.filter((goal) => goal.workId === workId);
+    const isPiece = work.calculationType === 'piece';
+    const totalUnits = logs.reduce((sum, log) => sum + (isPiece ? Number(log.quantity || 0) : Number(log.hours || 0)), 0);
+    const gross = totalUnits * Number(work.rate || 0);
+    const received = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const cur = state.settings.currency || 'ر.س';
+    const items = [
+      ...logs.map((log) => ({
+        title: `${isRTL ? 'إنجاز' : 'Work log'}: ${log.desc || (isRTL ? 'سجل عمل' : 'Work record')}`,
+        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${log.date} • ${isRTL ? 'من' : 'From'}: ${log.start || '-'} • ${isRTL ? 'إلى' : 'To'}: ${log.end || '-'} • ${isRTL ? 'الساعات' : 'Hours'}: ${Number(log.hours || 0)} • ${isRTL ? 'الكمية' : 'Quantity'}: ${Number(log.quantity || 0)}`,
+        amount: formatCurrency((isPiece ? Number(log.quantity || 0) : Number(log.hours || 0)) * Number(work.rate || 0), cur),
+      })),
+      ...payments.map((payment) => ({
+        title: `${isRTL ? 'دفعة مستلمة' : 'Payment received'}: ${payment.desc || payment.type}`,
+        subtitle: `${isRTL ? 'التاريخ' : 'Date'}: ${payment.date} • ${isRTL ? 'النوع' : 'Type'}: ${payment.type} • ${isRTL ? 'الطريقة' : 'Method'}: ${payment.method} • ${payment.createdAt || ''} • ${payment.desc || ''}`,
+        amount: formatCurrency(payment.amount, cur),
+      })),
+      ...goals.map((goal) => ({
+        title: isRTL ? 'هدف العمل' : 'Work goal',
+        subtitle: `${isRTL ? 'الفترة' : 'Frequency'}: ${goal.type}`,
+        amount: String(goal.target),
+      })),
+    ];
+    return exportService.exportSectionReportPDF(
+      `${isRTL ? 'كشف العمل' : 'Work Statement'}: ${work.name}`,
+      state,
+      items,
+      [
+        { label: isRTL ? 'العميل' : 'Client', value: work.client || '-' },
+        { label: isRTL ? 'الحالة' : 'Status', value: work.status },
+        { label: isRTL ? 'تاريخ البداية' : 'Start date', value: work.startDate || '-' },
+        { label: isRTL ? 'تاريخ النهاية' : 'End date', value: work.endDate || '-' },
+        { label: isRTL ? 'الوصف' : 'Description', value: work.desc || '-' },
+        { label: isRTL ? 'طريقة الحساب' : 'Calculation', value: isPiece ? (isRTL ? 'بالقطعة' : 'Per piece') : (isRTL ? 'بالساعة' : 'Hourly') },
+        { label: isRTL ? 'سعر الوحدة' : 'Unit rate', value: formatCurrency(work.rate, cur) },
+        { label: isRTL ? 'إجمالي الوحدات' : 'Total units', value: String(totalUnits) },
+        { label: isRTL ? 'إجمالي المستحق' : 'Gross earned', value: formatCurrency(gross, cur) },
+        { label: isRTL ? 'إجمالي المقبوض' : 'Total received', value: formatCurrency(received, cur) },
+        { label: isRTL ? 'الصافي المتبقي' : 'Net outstanding', value: formatCurrency(gross - received, cur) },
+      ],
+      isRTL
+    );
   },
 
   /**
