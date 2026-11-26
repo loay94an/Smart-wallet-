@@ -43,25 +43,25 @@ adaptive = RES / "mipmap-anydpi-v26"
 adaptive.mkdir(parents=True, exist_ok=True)
 for name in ("ic_launcher", "ic_launcher_round"):
     (adaptive / f"{name}.xml").write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\\n'
-        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\\n'
-        '  <background android:drawable="@color/ic_launcher_background"/>\\n'
-        '  <foreground android:drawable="@drawable/ic_launcher_foreground"/>\\n'
-        '</adaptive-icon>\\n',
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '  <background android:drawable="@color/ic_launcher_background"/>\n'
+        '  <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n'
+        '</adaptive-icon>\n',
         encoding="utf-8",
     )
 
 values = RES / "values"
 values.mkdir(parents=True, exist_ok=True)
 (values / "ic_launcher_background.xml").write_text(
-    '<?xml version="1.0" encoding="utf-8"?>\\n'
-    '<resources><color name="ic_launcher_background">#07132F</color></resources>\\n',
+    '<?xml version="1.0" encoding="utf-8"?>\n'
+    '<resources><color name="ic_launcher_background">#07132F</color></resources>\n',
     encoding="utf-8",
 )
 
 # Explicitly point the installed Android application at the generated resources.
 manifest = MANIFEST.read_text(encoding="utf-8")
-match = re.search(r"<application\\b[^>]*>", manifest, flags=re.DOTALL)
+match = re.search(r"<application\b[^>]*>", manifest, flags=re.DOTALL)
 if not match:
     raise SystemExit("Could not find the <application> element in AndroidManifest.xml")
 
@@ -70,7 +70,7 @@ for attribute, value in (
     ("icon", "@mipmap/ic_launcher"),
     ("roundIcon", "@mipmap/ic_launcher_round"),
 ):
-    pattern = rf'android:{attribute}\\s*=\\s*"[^"]*"'
+    pattern = rf'android:{attribute}\s*=\s*"[^"]*"'
     replacement = f'android:{attribute}="{value}"'
     if re.search(pattern, application_tag):
         application_tag = re.sub(pattern, replacement, application_tag)
