@@ -193,3 +193,51 @@ input::placeholder, textarea::placeholder { color: var(--text-muted) !important;
 .wallet-balance-card [class*="text-white"] { color: #FFFFFF !important; }
 .wallet-balance-card [class*="text-purple-"],
 .wallet-balance-card [class*="text-indigo-"] { color: #E2E8F0 !important; }
+
+
+/* Unified responsive application shell and theme-aware surfaces. */
+.app-shell {
+  min-height: 100dvh;
+  color: var(--text-primary);
+  background: var(--canvas);
+  transition: background-color .18s ease, color .18s ease;
+}
+.app-shell main { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+.app-shell header.sticky {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border-color: var(--border-neutral);
+  box-shadow: 0 2px 12px rgb(15 23 42 / .045);
+}
+.app-shell .wallet-balance-card {
+  background: linear-gradient(125deg, var(--accent-strong), var(--accent)) !important;
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  box-shadow: 0 14px 32px rgb(15 23 42 / .12) !important;
+}
+.app-shell [class~="bg-[#15152b]"],
+.app-shell [class~="bg-[#14142d]"],
+.app-shell [class~="bg-[#15152f]"],
+.app-shell [class~="bg-[#161633]"],
+.app-shell [class~="bg-[#1a1a38]"] {
+  background: var(--surface) !important;
+}
+.app-shell [class~="text-white"] { color: var(--text-primary); }
+.app-shell .wallet-balance-card [class~="text-white"],
+.app-shell .wallet-balance-card [class~="text-purple-300"],
+.app-shell .wallet-balance-card [class~="text-purple-300/80"] { color: #fff !important; }
+.app-shell [class~="text-purple-300/60"],
+.app-shell [class~="text-purple-300/70"],
+.app-shell [class~="text-purple-200"] { color: var(--text-secondary) !important; }
+.app-shell [class~="border-purple-500/20"],
+.app-shell [class~="border-purple-500/30"],
+.app-shell [class~="border-purple-800/50"],
+.app-shell [class~="border-purple-900/40"] { border-color: var(--border-neutral) !important; }
+.app-shell button { -webkit-tap-highlight-color: transparent; }
+.app-shell button:focus-visible, .app-shell summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 420px) {
+  .app-shell main { padding-inline: .75rem; }
+  .app-shell .wallet-balance-card { padding: 1rem !important; border-radius: 1.25rem !important; }
+}
