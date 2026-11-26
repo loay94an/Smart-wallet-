@@ -74,6 +74,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
 
   const [isCatModalOpen, setIsCatModalOpen] = useState<boolean>(false);
   const [newCatName, setNewCatName] = useState<string>('');
+  const [categoryError, setCategoryError] = useState<string>('');
   const [newCatType, setNewCatType] = useState<'income' | 'expense'>('expense');
   const [returnToTxAfterCategory, setReturnToTxAfterCategory] = useState<boolean>(false);
 
@@ -145,13 +146,14 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       (category) => category.type === newCatType && category.name.trim().toLocaleLowerCase() === name.toLocaleLowerCase()
     );
     if (duplicate) {
-      setFormError(isRTL ? 'هذه الفئة موجودة بالفعل' : 'This category already exists');
+      setCategoryError(isRTL ? 'هذه الفئة موجودة بالفعل' : 'This category already exists');
       return;
     }
 
     const categoryId = onAddCategory({ name, type: newCatType });
     if (returnToTxAfterCategory) {
       setTxCategory(categoryId);
+      setCategoryError('');
       setFormError('');
       setIsCatModalOpen(false);
       setReturnToTxAfterCategory(false);
@@ -712,6 +714,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                     onClick={() => {
                       setNewCatType(txType);
                       setNewCatName('');
+                      setCategoryError('');
                       setFormError('');
                       setReturnToTxAfterCategory(true);
                       setIsCatModalOpen(true);
@@ -884,10 +887,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
             {/* Add New Category Form */}
             <form onSubmit={handleAddCategory} className="border-t border-purple-900/40 pt-4 space-y-3">
               <h4 className="text-xs font-bold text-purple-300">{isRTL ? 'إضافة فئة جديدة' : 'Add New Category'}</h4>
+              {categoryError && <p className="rounded-lg border border-red-500/30 bg-red-950/30 p-2 text-[11px] text-red-300">{categoryError}</p>}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setNewCatType('expense')}
+                  onClick={() => { setNewCatType('expense'); setCategoryError(''); }}
                   className={`py-1.5 rounded-lg text-xs font-bold ${
                     newCatType === 'expense'
                       ? 'bg-red-600 text-white'
@@ -898,7 +902,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNewCatType('income')}
+                  onClick={() => { setNewCatType('income'); setCategoryError(''); }}
                   className={`py-1.5 rounded-lg text-xs font-bold ${
                     newCatType === 'income'
                       ? 'bg-emerald-600 text-white'
@@ -914,7 +918,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                   type="text"
                   required
                   value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
+                  onChange={(e) => { setNewCatName(e.target.value); setCategoryError(''); }}
                   placeholder={isRTL ? 'اسم الفئة الجديد...' : 'Category name...'}
                   className="flex-1 rounded-xl border border-purple-900/50 bg-[#1c1c3c] p-2 text-xs text-white outline-none focus:border-purple-500"
                 />
