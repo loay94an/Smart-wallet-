@@ -27,7 +27,7 @@ interface WalletPageProps {
   state: AppState;
   onSaveTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => void;
-  onAddCategory: (category: Omit<Category, 'id'>) => void;
+  onAddCategory: (category: Omit<Category, 'id'>) => string;
   onDeleteCategory: (id: string) => void;
   onPromptBudget: (categoryId: string) => void;
   language: 'ar' | 'en';
@@ -75,6 +75,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
   const [isCatModalOpen, setIsCatModalOpen] = useState<boolean>(false);
   const [newCatName, setNewCatName] = useState<string>('');
   const [newCatType, setNewCatType] = useState<'income' | 'expense'>('expense');
+  const [returnToTxAfterCategory, setReturnToTxAfterCategory] = useState<boolean>(false);
 
   // Transaction form states
   const [txType, setTxType] = useState<'income' | 'expense'>('expense');
@@ -137,12 +138,24 @@ export const WalletPage: React.FC<WalletPageProps> = ({
 
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
+    const name = newCatName.trim();
+    if (!name) return;
 
-    onAddCategory({
-      name: newCatName.trim(),
-      type: newCatType,
-    });
+    const duplicate = state.categories.some(
+      (category) => category.type === newCatType && category.name.trim().toLocaleLowerCase() === name.toLocaleLowerCase()
+    );
+    if (duplicate) {
+      setFormError(isRTL ? 'هذه الفئة موجودة بالفعل' : 'This category already exists');
+      return;
+    }
+
+    const categoryId = onAddCategory({ name, type: newCatType });
+    if (returnToTxAfterCategory) {
+      setTxCategory(categoryId);
+      setFormError('');
+      setIsCatModalOpen(false);
+      setReturnToTxAfterCategory(false);
+    }
     setNewCatName('');
   };
 
@@ -637,7 +650,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setTxType('expense')}
+                    onClick={() => {
+                      setTxType('expense');
+                      const firstCategory = state.categories.find((category) => category.type === 'expense');
+                      setTxCategory(firstCategory?.id || '');
+                    }}
                     className={`py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                       txType === 'expense'
                         ? 'bg-red-600 text-white shadow-md'
@@ -649,7 +666,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTxType('income')}
+                    onClick={() => {
+                      setTxType('income');
+                      const firstCategory = state.categories.find((category) => category.type === 'income');
+                      setTxCategory(firstCategory?.id || '');
+                    }}
                     className={`py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                       txType === 'income'
                         ? 'bg-emerald-600 text-white shadow-md'
@@ -684,13 +705,30 @@ export const WalletPage: React.FC<WalletPageProps> = ({
 
               {/* Category */}
               <div>
-                <label className="text-xs font-bold text-purple-300 block mb-1">{isRTL ? 'الفئة *' : 'Category *'}</label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-xs font-bold text-purple-300">{isRTL ? 'الفئة *' : 'Category *'}</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewCatType(txType);
+                      setNewCatName('');
+                      setFormError('');
+                      setReturnToTxAfterCategory(true);
+                      setIsCatModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1.5 text-[10px] font-bold text-cyan-300 transition-colors hover:bg-cyan-500/20"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>{isRTL ? 'إضافة فئة جديدة' : 'Add category'}</span>
+                  </button>
+                </div>
                 <select
                   required
                   value={txCategory}
                   onChange={(e) => setTxCategory(e.target.value)}
                   className="w-full rounded-xl border border-purple-900/50 bg-[#1c1c3c] p-2.5 text-xs font-bold text-white outline-none focus:border-purple-500"
                 >
+                  <option value="" disabled>{isRTL ? 'اختر الفئة' : 'Select a category'}</option>
                   {state.categories
                     .filter((c) => c.type === txType)
                     .map((cat) => (
@@ -699,6 +737,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                       </option>
                     ))}
                 </select>
+                {state.categories.filter((category) => category.type === txType).length === 0 && (
+                  <p className="mt-1.5 text-[10px] text-amber-300">{isRTL ? 'لا توجد فئات لهذا النوع. أضف فئة للمتابعة.' : 'No categories for this type. Add one to continue.'}</p>
+                )}
               </div>
 
               {/* Date */}
