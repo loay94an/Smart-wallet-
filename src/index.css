@@ -24,7 +24,32 @@
   --text-muted: #94A3B8;
   --border-neutral: #E2E8F0;
   --shadow-neutral: rgb(24 24 27 / 0.08);
+  /* Smart overview chart colors follow the selected palette; plain hex values keep older WebViews compatible. */
+  --overview-income: #0F172A;
+  --overview-expense: #DC6670;
+  --overview-work: #3988B8;
+  --overview-debt: #B7791F;
+  --overview-receivable: #10A878;
 }
+
+
+/* Palette-specific smart overview colors (compatible with older Android WebViews). */
+:root[data-theme-palette="navy-emerald"] { --overview-income: #0F172A; --overview-expense: #D9485F; --overview-work: #3979A8; --overview-debt: #B7791F; --overview-receivable: #10A878; }
+:root[data-theme-palette="mono"] { --overview-income: #27272A; --overview-expense: #71717A; --overview-work: #52525B; --overview-debt: #A1A1AA; --overview-receivable: #3F3F46; }
+:root[data-theme-palette="ocean"] { --overview-income: #087EAA; --overview-expense: #D9485F; --overview-work: #2563A6; --overview-debt: #B7791F; --overview-receivable: #0F9B8E; }
+:root[data-theme-palette="emerald"] { --overview-income: #07845B; --overview-expense: #D9485F; --overview-work: #287DA0; --overview-debt: #B7791F; --overview-receivable: #0D9B70; }
+:root[data-theme-palette="violet"] { --overview-income: #7651C8; --overview-expense: #D94878; --overview-work: #3979B8; --overview-debt: #B7791F; --overview-receivable: #269B83; }
+:root[data-theme-palette="amber"] { --overview-income: #B7791F; --overview-expense: #D9485F; --overview-work: #3979B8; --overview-debt: #8F681E; --overview-receivable: #269B83; }
+:root[data-theme-palette="rose"] { --overview-income: #C04470; --overview-expense: #B94B55; --overview-work: #3979B8; --overview-debt: #B7791F; --overview-receivable: #269B83; }
+
+/* Higher-contrast chart colors in dark appearance. */
+:root[data-theme-mode="dark"][data-theme-palette="navy-emerald"] { --overview-income: #34D399; --overview-expense: #FB7185; --overview-work: #38BDF8; --overview-debt: #FBBF24; --overview-receivable: #6EE7B7; }
+:root[data-theme-mode="dark"][data-theme-palette="mono"] { --overview-income: #E5E7EB; --overview-expense: #F87171; --overview-work: #A1A1AA; --overview-debt: #FBBF24; --overview-receivable: #D4D4D8; }
+:root[data-theme-mode="dark"][data-theme-palette="ocean"] { --overview-income: #38BDF8; --overview-expense: #FB7185; --overview-work: #60A5FA; --overview-debt: #FBBF24; --overview-receivable: #2DD4BF; }
+:root[data-theme-mode="dark"][data-theme-palette="emerald"] { --overview-income: #34D399; --overview-expense: #FB7185; --overview-work: #38BDF8; --overview-debt: #FBBF24; --overview-receivable: #6EE7B7; }
+:root[data-theme-mode="dark"][data-theme-palette="violet"] { --overview-income: #A78BFA; --overview-expense: #FB7185; --overview-work: #60A5FA; --overview-debt: #FBBF24; --overview-receivable: #5EEAD4; }
+:root[data-theme-mode="dark"][data-theme-palette="amber"] { --overview-income: #FBBF24; --overview-expense: #FB7185; --overview-work: #60A5FA; --overview-debt: #FCD34D; --overview-receivable: #5EEAD4; }
+:root[data-theme-mode="dark"][data-theme-palette="rose"] { --overview-income: #FB7185; --overview-expense: #FDA4AF; --overview-work: #60A5FA; --overview-debt: #FBBF24; --overview-receivable: #5EEAD4; }
 
 :root[data-theme-palette="navy-emerald"] { --accent: #0F172A; --accent-strong: #0B1220; --accent-soft: #D1FAE5; --primary-theme: #0F172A; }
 :root[data-theme-palette="mono"] { --accent: #27272a; --accent-strong: #18181b; --accent-soft: #e4e4e7; --primary-theme: #27272a; }
