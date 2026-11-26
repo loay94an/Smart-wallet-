@@ -29,12 +29,7 @@ interface SettingsModalProps {
 }
 
 const THEME_OPTIONS = [
-  { id: 'purple', nameAr: '🟣 بنفسجي عصري', color: '#7c3aed' },
-  { id: 'blue', nameAr: '🔵 أزرق محيطي', color: '#2563eb' },
-  { id: 'green', nameAr: '🟢 أخضر مالي', color: '#059669' },
-  { id: 'red', nameAr: '🔴 ياقوتي أنيق', color: '#dc2626' },
-  { id: 'orange', nameAr: '🟠 كهرماني دافئ', color: '#ea580c' },
-  { id: 'pink', nameAr: '🩷 وردي فاقع', color: '#db2777' },
+  { id: 'purple', nameAr: '⚪ أبيض ورمادي وأسود', color: '#27272a' },
 ];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
