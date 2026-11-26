@@ -68,16 +68,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isDropdownOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-purple-900/30 bg-[#121226]/95 backdrop-blur-md px-3 sm:px-4 py-2.5 shadow-lg">
+    <header className="sticky top-0 z-40 border-b border-[var(--border-neutral)] bg-[var(--surface)]/95 backdrop-blur-md px-3 sm:px-4 py-2.5 shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
         {/* Logo and title */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 shadow-md shadow-purple-600/30">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-[var(--accent)] shadow-md shadow-purple-600/30">
             <Wallet className="h-5 w-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-extrabold tracking-tight text-white sm:text-base md:text-lg">
+              <h1 className="text-sm font-extrabold tracking-tight text-[var(--text-primary)] sm:text-base md:text-lg">
                 {isRTL ? 'المحفظة المالية الذكية' : 'Smart Financial Wallet'}
               </h1>
               {/* IndexedDB badge */}
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>IndexedDB</span>
               </span>
             </div>
-            <p className="text-[11px] text-purple-300/70 hidden sm:block">
+            <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">
               {isRTL ? 'إدارة مالية شاملة • استيراد وتصدير • مزامنة سحابية' : 'Financial Management • Backup & Export • Cloud Sync'}
             </p>
           </div>
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-sm active:scale-95 ${
                 isDropdownOpen
                   ? 'border-purple-400 bg-purple-600 text-white shadow-purple-600/30'
-                  : 'border-purple-800/40 bg-[#1a1a38] text-purple-200 hover:bg-purple-800/40'
+                  : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:bg-[var(--accent-soft)]'
               }`}
               title={isRTL ? 'القائمة الرئيسية' : 'Main menu'}
               aria-expanded={isDropdownOpen}
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div
                 className={`absolute ${
                   isRTL ? 'left-0' : 'right-0'
-                } mt-2 w-72 sm:w-80 rounded-2xl border border-purple-700/50 bg-[#14142d] p-2 shadow-2xl backdrop-blur-xl z-50 animate-fadeIn`}
+                } mt-2 w-72 sm:w-80 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-2 shadow-2xl backdrop-blur-xl z-50 animate-fadeIn`}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 {/* Header */}
