@@ -4,7 +4,6 @@ import {
   Cloud,
   Share2,
   Lock,
-  Settings,
   Database,
   Download,
   Menu,
@@ -12,7 +11,6 @@ import {
   FileSpreadsheet,
   FileText,
   Calculator,
-  SlidersHorizontal,
   X,
   ExternalLink,
   BookOpen,
@@ -109,16 +107,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Quick Settings Icon */}
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            title={isRTL ? 'الإعدادات' : 'Settings'}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple-800/40 bg-[#1a1a38] text-purple-200 transition-all hover:bg-purple-800/40 active:scale-95 shadow-sm"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
-
           {/* Main Dropdown Button: Three dots icon only */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -129,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? 'border-purple-400 bg-purple-600 text-white shadow-purple-600/30'
                   : 'border-purple-800/40 bg-[#1a1a38] text-purple-200 hover:bg-purple-800/40'
               }`}
-              title={isRTL ? 'قائمة الأدوات والخيارات' : 'Tools & Options Menu'}
+              title={isRTL ? 'القائمة الرئيسية' : 'Main menu'}
               aria-expanded={isDropdownOpen}
             >
               <MoreVertical className="h-4 w-4" />
@@ -147,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="flex items-center justify-between px-3 py-2 border-b border-purple-900/40 mb-1">
                   <span className="text-xs font-black text-white flex items-center gap-1.5">
                     <SlidersHorizontal className="h-3.5 w-3.5 text-purple-400" />
-                    <span>{isRTL ? 'لوحة الأدوات والخدمات' : 'Tools & Services'}</span>
+                    <span>{isRTL ? 'القائمة والإعدادات' : 'Menu & Settings'}</span>
                   </span>
                   <button
                     type="button"
@@ -318,7 +306,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <Settings className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <div className="text-xs font-extrabold">{isRTL ? 'الإعدادات والمظهر' : 'Settings & Themes'}</div>
+                      <div className="text-xs font-extrabold">{isRTL ? 'إعدادات التطبيق' : 'App Settings'}</div>
                       <div className="text-[10px] text-purple-300/70 font-normal">
                         {isRTL ? 'العملة، السمة، الأمان PIN' : 'Currency, theme, PIN security'}
                       </div>

@@ -597,6 +597,16 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           <p className="text-xs text-purple-300/70">
             {isRTL ? 'حساب بالساعة أو بالقطعة، مؤقت ذكي، وسجل الدفعات' : 'Hourly/piece rates, timer and salary logs'}
           </p>
+
+          {activeWork && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+              <span className="text-xs font-extrabold text-[var(--text-primary)]">{activeWork.name}</span>
+              <span className="text-[10px] text-[var(--text-secondary)]">{isRTL ? 'الصافي الباقي من المستحقات' : 'Net outstanding'}</span>
+              <strong className={`text-sm font-black ${netDueRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {formatCurrency(netDueRemaining, cur)}
+              </strong>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -772,10 +782,10 @@ export const WorkPage: React.FC<WorkPageProps> = ({
             const pieceLiveEarnings = currentTimer.pieces * Number(activeWork.rate);
 
             return (
-              <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/70 via-[#181135] to-[#121228] p-5 shadow-xl">
-                <div className="flex items-center justify-between mb-3">
+              <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/70 via-[#181135] to-[#121228] p-2.5 shadow-md">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-purple-400" />
+                    <Clock className="h-4 w-4 text-purple-400" />
                     <span className="text-xs font-black text-white">
                       {isRTL ? 'المؤقت الذكي وجلسات الإنجاز (مستقل لكل مشروع)' : 'Smart Timer & Session (Independent)'}
                     </span>
@@ -785,8 +795,8 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   </span>
                 </div>
 
-                <div className="text-center my-3">
-                  <div className="font-mono text-4xl sm:text-5xl font-black tracking-widest text-white drop-shadow-md">
+                <div className="text-center my-1.5">
+                  <div className="font-mono text-2xl sm:text-3xl font-black tracking-widest text-white drop-shadow-md">
                     {formatTimer(currentTimer.seconds)}
                   </div>
                   <div className="mt-1 text-[11px] text-purple-300/70">
@@ -800,7 +810,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
 
                 {/* Piece counter section if piece rate */}
                 {isPiece && (
-                  <div className="my-3 space-y-3 rounded-2xl border border-purple-800/40 bg-[#16122e]/90 p-3.5 sm:p-4 shadow-inner">
+                  <div className="my-1.5 space-y-3 rounded-2xl border border-purple-800/40 bg-[#16122e]/90 p-3.5 sm:p-4 shadow-inner">
                     {/* 1. Custom input & Smart Add Button (+) */}
                     <div>
                       <label className="block text-[11px] font-bold text-purple-200 mb-1.5">
