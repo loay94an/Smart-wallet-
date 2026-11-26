@@ -645,7 +645,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      exportService.exportWorkToExcel(state, isRTL, activeWork.id);
+                      exportService.exportWorkToExcel(state, isRTL);
                       setIsExportMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-green-300 hover:bg-green-950/40 rounded-xl transition-all"
@@ -1041,7 +1041,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        exportService.exportWorkToExcel(state, isRTL);
+                        exportService.exportWorkToExcel(state, isRTL, activeWork.id);
                         setIsProjectMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-green-300 hover:bg-green-950/40 rounded-xl transition-all"
