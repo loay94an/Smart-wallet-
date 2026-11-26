@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, Users, PieChart, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, BriefcaseBusiness, MoreHorizontal } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'wallet' | 'people' | 'work' | 'info' | 'tools' | 'more';
 
@@ -15,7 +15,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, la
     { id: 'dashboard', label: isRTL ? 'الرئيسية' : 'Home', icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'wallet', label: isRTL ? 'المعاملات' : 'Wallet', icon: <Receipt className="h-5 w-5" /> },
     { id: 'people', label: isRTL ? 'الأشخاص' : 'People', icon: <Users className="h-5 w-5" /> },
-    { id: 'info', label: isRTL ? 'الميزانية' : 'Plan', icon: <PieChart className="h-5 w-5" /> },
+    { id: 'work', label: isRTL ? 'العمل' : 'Work', icon: <BriefcaseBusiness className="h-5 w-5" /> },
     { id: 'more', label: isRTL ? 'المزيد' : 'More', icon: <MoreHorizontal className="h-5 w-5" /> },
   ];
 
@@ -23,7 +23,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, la
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-purple-900/30 bg-[var(--surface)]/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5 shadow-lg backdrop-blur-xl" aria-label={isRTL ? 'التنقل الرئيسي' : 'Main navigation'}>
       <div className="mx-auto flex max-w-xl items-center justify-around gap-1">
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id || (tab.id === 'more' && (activeTab === 'work' || activeTab === 'tools'));
+          const isActive = activeTab === tab.id || (tab.id === 'more' && activeTab === 'tools');
           return (
             <button
               key={tab.id}
