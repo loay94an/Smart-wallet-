@@ -5,8 +5,8 @@ import App from './App.tsx';
 import './index.css';
 
 if (Capacitor.isNativePlatform()) {
-  StatusBar.setStyle({ style: Style.Light }).catch(() => undefined);
-  StatusBar.setBackgroundColor({ color: '#0a0a1a' }).catch(() => undefined);
+  StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
+  StatusBar.setBackgroundColor({ color: '#f5f5f5' }).catch(() => undefined);
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
