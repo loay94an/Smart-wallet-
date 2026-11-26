@@ -9,6 +9,7 @@ function escapeHtml(value: unknown): string {
   }[char] as string));
 }
 import { formatCurrency } from './i18n';
+import { saveExportBlob } from './fileExport';
 
 /**
  * Universal export service for Excel and PDF across all sections.
@@ -34,7 +35,7 @@ export const exportService = {
     const worksheet = XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد معاملات مسجلة' : 'No transactions recorded' }]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, isRTL ? 'المعاملات المالية' : 'Transactions');
-    XLSX.writeFile(workbook, `wallet-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `wallet-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -114,7 +115,7 @@ export const exportService = {
 
     XLSX.utils.book_append_sheet(workbook, ws1, isRTL ? 'كشف الأشخاص' : 'People Summary');
     XLSX.utils.book_append_sheet(workbook, ws2, isRTL ? 'سجلات الديون والمستحقات' : 'Debts Log');
-    XLSX.writeFile(workbook, `debts-people-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `debts-people-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -192,7 +193,7 @@ export const exportService = {
     XLSX.utils.book_append_sheet(workbook, ws2, isRTL ? 'سجلات الإنجاز' : 'Work Logs');
     XLSX.utils.book_append_sheet(workbook, ws3, isRTL ? 'الدفعات المقبوضة' : 'Work Payments');
 
-    XLSX.writeFile(workbook, `work-freelance-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `work-freelance-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -228,7 +229,7 @@ export const exportService = {
     XLSX.utils.book_append_sheet(workbook, ws1, isRTL ? 'الميزانيات الشهرية' : 'Budgets');
     XLSX.utils.book_append_sheet(workbook, ws2, isRTL ? 'أهداف الادخار' : 'Savings Goals');
 
-    XLSX.writeFile(workbook, `budgets-goals-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `budgets-goals-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -297,7 +298,7 @@ export const exportService = {
       console.warn('Could not include work timers in export:', error);
     }
 
-    XLSX.writeFile(workbook, `full-wallet-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    void saveExportBlob(new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `full-wallet-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
@@ -333,7 +334,7 @@ export const exportService = {
         }
       }
 
-      pdf.save(`${filename}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      await saveExportBlob(pdf.output('blob'), `${filename}-${new Date().toISOString().slice(0, 10)}.pdf`);
       return true;
     } catch (e) {
       console.error('PDF export error:', e);
