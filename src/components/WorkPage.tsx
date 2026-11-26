@@ -133,7 +133,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   });
 
   // This clock only refreshes the display; elapsed time is calculated from startedAt.
-  const [timerNow, setTimerNow] = useState<number>(() => Date.now());
+  const [, setTimerNow] = useState<number>(() => Date.now());
   const [customPiecesInput, setCustomPiecesInput] = useState<string>('');
 
   // Normalize timers restored from imported backups (including legacy checkpoints).
