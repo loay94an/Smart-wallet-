@@ -1,18 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppState, SecurityConfig } from '../types';
 import { createPinCredential } from '../services/security';
-import {
-  Settings,
-  Palette,
-  Globe,
-  DollarSign,
-  Shield,
-  Trash2,
-  X,
-  Check,
-  Sun,
-  Moon,
-} from 'lucide-react';
+import { Settings, Palette, Globe, DollarSign, Shield, X, Check, Sun, Moon, Lock, Fingerprint } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,8 +11,6 @@ interface SettingsModalProps {
   onUpdateSecurity: (newSecurity: SecurityConfig) => void;
   language: 'ar' | 'en';
 }
-
-const normalizeTheme = (value?: string): string => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' } as Record<string, string>)[value || ''] || value || 'mono';
 
 const THEME_OPTIONS = [
   { id: 'navy-emerald', nameAr: 'كحلي وزمردي', nameEn: 'Navy & Emerald', color: '#0F172A', secondary: '#10B981' },
@@ -35,248 +22,185 @@ const THEME_OPTIONS = [
   { id: 'rose', nameAr: 'وردي', nameEn: 'Rose', color: '#c04470', secondary: '#fb7185' },
 ];
 
+const fieldClass = 'w-full rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
+const sectionClass = 'space-y-3 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-4';
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({
-  isOpen,
-  onClose,
-  state,
-  onUpdateSettings,
-  onUpdateSecurity,
-  language,
+  isOpen, onClose, state, onUpdateSettings, onUpdateSecurity, language,
 }) => {
-  const isRTL = language === 'ar';
-
-  // All hooks called unconditionally at top level
-
-  const [activeTheme, setActiveTheme] = useState<string>(normalizeTheme(state.settings?.theme));
-  const [appearance, setAppearance] = useState<'light' | 'dark'>(state.settings?.appearance || 'light');
-  const [currency, setCurrency] = useState<string>(state.settings?.currency || 'ر.س');
-
-  const [securityType, setSecurityType] = useState<'off' | 'pin' | 'pattern'>(state.security?.type || 'off');
-  const [newPin, setNewPin] = useState<string>(state.security?.pin || '');
-
+  const [activeTheme, setActiveTheme] = useState('navy-emerald');
+  const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
+  const [currency, setCurrency] = useState('ر.س');
+  const [selectedLanguage, setSelectedLanguage] = useState<'ar' | 'en'>(language);
+  const [securityType, setSecurityType] = useState<'off' | 'pin' | 'pattern'>('off');
+  const [newPin, setNewPin] = useState('');
+  const [pattern, setPattern] = useState<number[]>([]);
+  const [confirmPattern, setConfirmPattern] = useState<number[]>([]);
+  const [patternStep, setPatternStep] = useState<'create' | 'confirm'>('create');
   const [statusMsg, setStatusMsg] = useState<{ text: string; isError?: boolean } | null>(null);
-  const [confirmingReset, setConfirmingReset] = useState<boolean>(false);
+  const isRTL = selectedLanguage === 'ar';
 
+  // Initialize drafts only when the dialog opens. Changes elsewhere in AppState
+  // must not overwrite edits that the user has not saved yet.
   useEffect(() => {
-    if (isOpen) {
-      setActiveTheme(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'navy-emerald'));
-      setAppearance(state.settings?.appearance || 'light');
-      setCurrency(state.settings?.currency || 'ر.س');
-      setSecurityType(state.security?.type || 'off');
-      setNewPin(state.security?.pin || '');
-      setConfirmingReset(false);
-      setStatusMsg(null);
-
-    }
-  }, [isOpen, state]);
+    if (!isOpen) return;
+    const themeAliases: Record<string, string> = { purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' };
+    const theme = state.settings?.theme || 'navy-emerald';
+    setActiveTheme(themeAliases[theme] || theme);
+    setAppearance(state.settings?.appearance || 'light');
+    setCurrency(state.settings?.currency || 'ر.س');
+    setSelectedLanguage(state.settings?.language || language);
+    setSecurityType(state.security?.type || 'off');
+    setNewPin('');
+    setPattern([]);
+    setConfirmPattern([]);
+    setPatternStep('create');
+    setStatusMsg(null);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const showStatus = (text: string, isError = false) => {
-    setStatusMsg({ text, isError });
-    setTimeout(() => setStatusMsg(null), 3500);
+  const showError = (text: string) => setStatusMsg({ text, isError: true });
+  const addPatternDot = (dot: number) => {
+    if (patternStep === 'create') {
+      setPattern((prev) => prev.includes(dot) ? prev : [...prev, dot]);
+    } else {
+      setConfirmPattern((prev) => prev.includes(dot) ? prev : [...prev, dot]);
+    }
+  };
+  const resetPattern = () => {
+    if (patternStep === 'create') setPattern([]);
+    else setConfirmPattern([]);
   };
 
-  const handleSaveSettings = async () => {
+  const handleSave = async () => {
     try {
-      onUpdateSettings({
-      theme: activeTheme,
-      appearance,
-      currency: currency.trim() || 'ر.س',
-    });
+      let nextSecurity: SecurityConfig = state.security || { enabled: false, type: 'off', pin: '', pattern: [] };
 
-    if (securityType === 'pin') {
-      if (newPin) {
-        const credential = await createPinCredential(newPin);
-        onUpdateSecurity({
-          enabled: true,
-          type: 'pin',
-          ...credential,
-          pattern: [],
-        });
-      } else if (state.security.pinHash) {
-        onUpdateSecurity({ ...state.security, enabled: true, type: 'pin', pin: '' });
+      if (securityType === 'off') {
+        nextSecurity = { enabled: false, type: 'off', pin: '', pinSalt: '', pinHash: '', pattern: [] };
+      } else if (securityType === 'pin') {
+        if (newPin) {
+          if (!/^\d{4,6}$/.test(newPin)) {
+            showError(isRTL ? 'رمز PIN يجب أن يتكون من 4 إلى 6 أرقام' : 'PIN must contain 4 to 6 digits');
+            return;
+          }
+          const credential = await createPinCredential(newPin);
+          nextSecurity = { enabled: true, type: 'pin', ...credential, pattern: [] };
+        } else if (state.security?.type === 'pin' && state.security.pinHash) {
+          nextSecurity = { ...state.security, enabled: true, type: 'pin' };
+        } else {
+          showError(isRTL ? 'أدخل رمز PIN جديدًا من 4 إلى 6 أرقام' : 'Enter a new 4-6 digit PIN');
+          return;
+        }
       } else {
-        showStatus(isRTL ? 'يرجى إدخال رمز PIN من 4 إلى 6 أرقام' : 'Enter a 4-6 digit PIN', true);
-        return;
+        if (patternStep !== 'confirm' || pattern.length < 4 || confirmPattern.length < 4) {
+          showError(isRTL ? 'أنشئ نمطًا من 4 نقاط على الأقل ثم أكّده' : 'Create and confirm a pattern with at least 4 dots');
+          return;
+        }
+        if (pattern.join(',') !== confirmPattern.join(',')) {
+          showError(isRTL ? 'النمط التأكيدي غير مطابق. أعد المحاولة' : 'Pattern confirmation does not match');
+          setConfirmPattern([]);
+          setPatternStep('confirm');
+          return;
+        }
+        nextSecurity = { enabled: true, type: 'pattern', pin: '', pinSalt: '', pinHash: '', pattern };
       }
-    } else {
-      onUpdateSecurity({
-        enabled: securityType === 'pattern',
-        type: securityType,
-        pin: '',
-        pinSalt: '',
-        pinHash: '',
-        pattern: securityType === 'pattern' ? state.security.pattern : [],
-      });
-    }
 
+      // Apply settings only after all security validation has passed.
+      onUpdateSettings({
+        theme: activeTheme,
+        appearance,
+        currency: currency.trim() || 'ر.س',
+        language: selectedLanguage,
+      });
+      onUpdateSecurity(nextSecurity);
       onClose();
     } catch (error: any) {
-      showStatus(isRTL ? 'تعذر حفظ إعدادات الحماية: ' + (error?.message || 'خطأ غير معروف') : 'Could not save security settings', true);
+      showError(isRTL ? 'تعذر حفظ الإعدادات: ' + (error?.message || 'خطأ غير معروف') : 'Could not save settings: ' + (error?.message || 'Unknown error'));
     }
   };
 
+  const cardTitle = 'text-xs font-extrabold text-[var(--text-primary)] flex items-center gap-2';
+  const muted = 'text-[11px] text-[var(--text-secondary)]';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-4 shadow-2xl space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-purple-900/40 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/30">
-              <Settings className="h-5 w-5" />
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-3xl border border-[var(--border-neutral)] bg-[var(--canvas)] p-4 sm:p-5 shadow-2xl space-y-4">
+        <header className="flex items-center justify-between border-b border-[var(--border-neutral)] pb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Settings className="h-5 w-5" /></div>
             <div>
-              <h3 className="text-base font-black text-white">{isRTL ? 'إعدادات التطبيق' : 'Settings'}</h3>
-              <p className="text-[11px] text-purple-300/70">
-                {isRTL ? 'الألوان، اللغة، العملة، وقفل التطبيق' : 'Colors, language, currency & app lock'}
-              </p>
+              <h3 className="text-base font-black text-[var(--text-primary)]">{isRTL ? 'إعدادات التطبيق' : 'App Settings'}</h3>
+              <p className={muted}>{isRTL ? 'المظهر واللغة والعملة والحماية' : 'Appearance, language, currency and security'}</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-purple-400 hover:text-white">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+          <button type="button" onClick={onClose} aria-label={isRTL ? 'إغلاق' : 'Close'} className="rounded-xl p-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><X className="h-5 w-5" /></button>
+        </header>
 
-        {/* Status Message Toast */}
-        {statusMsg && (
-          <div
-            className={`rounded-2xl border p-3 text-center text-xs font-bold animate-fadeIn ${
-              statusMsg.isError
-                ? 'border-red-500/50 bg-red-950/40 text-red-300'
-                : 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
-            }`}
-          >
-            {statusMsg.text}
-          </div>
-        )}
+        {statusMsg && <div role="alert" className={`rounded-xl border p-3 text-xs font-bold ${statusMsg.isError ? 'border-red-500/40 bg-red-500/10 text-red-600' : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'}`}>{statusMsg.text}</div>}
 
-        {/* 1. Color palette and appearance */}
-        <div className="space-y-3 rounded-2xl border border-purple-900/40 bg-[#171736] p-4">
-          <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-            <Palette className="h-4 w-4 text-purple-400" />
-            <span>{isRTL ? 'ألوان التطبيق' : 'Color palette'}</span>
-          </label>
+        <section className={sectionClass}>
+          <div className={cardTitle}><Palette className="h-4 w-4 text-[var(--accent)]" />{isRTL ? 'المظهر والألوان' : 'Appearance & Colors'}</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {THEME_OPTIONS.map((th) => (
-              <button
-                key={th.id}
-                type="button"
-                aria-pressed={activeTheme === th.id}
-                onClick={() => setActiveTheme(th.id)}
-                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition-all border ${
-                  activeTheme === th.id
-                    ? 'border-purple-400 bg-purple-900/20 text-white shadow-md ring-1 ring-purple-400/30'
-                    : 'border-purple-900/30 bg-[#121226] text-purple-300 hover:border-purple-700'
-                }`}
-              >
-                <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full border border-black/10">
-                  <span className="h-full w-1/2" style={{ backgroundColor: th.color }} />
-                  <span className="h-full w-1/2" style={{ backgroundColor: th.secondary }} />
-                </span>
-                <span className="text-[11px]">{isRTL ? th.nameAr : th.nameEn}</span>
-                {activeTheme === th.id && <Check className="ms-auto h-3.5 w-3.5" />}
+            {THEME_OPTIONS.map((theme) => (
+              <button key={theme.id} type="button" aria-pressed={activeTheme === theme.id} onClick={() => setActiveTheme(theme.id)}
+                className={`flex items-center gap-2 rounded-xl border p-2.5 text-start transition-colors ${activeTheme === theme.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)]'}`}>
+                <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full border border-black/10"><span className="h-full w-1/2" style={{ backgroundColor: theme.color }} /><span className="h-full w-1/2" style={{ backgroundColor: theme.secondary }} /></span>
+                <span className="min-w-0 flex-1 text-[11px] font-bold text-[var(--text-primary)]">{isRTL ? theme.nameAr : theme.nameEn}</span>
+                {activeTheme === theme.id && <Check className="h-3.5 w-3.5 text-[var(--accent)]" />}
               </button>
             ))}
           </div>
-          <div className="border-t border-purple-900/30 pt-3 space-y-2">
-            <label className="text-xs font-bold text-purple-200">{isRTL ? 'نمط العرض' : 'Appearance'}</label>
+          <div className="border-t border-[var(--border-neutral)] pt-3 space-y-2">
+            <label className={cardTitle}>{isRTL ? 'وضع العرض' : 'Display Mode'}</label>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setAppearance('light')} aria-pressed={appearance === 'light'} className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-bold ${appearance === 'light' ? 'border-purple-400 bg-purple-900/30 text-white' : 'border-purple-900/30 bg-[#121226] text-purple-300'}`}>
-                <Sun className="h-4 w-4" /> {isRTL ? 'نهاري' : 'Light'}
-              </button>
-              <button type="button" onClick={() => setAppearance('dark')} aria-pressed={appearance === 'dark'} className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-bold ${appearance === 'dark' ? 'border-purple-400 bg-purple-900/30 text-white' : 'border-purple-900/30 bg-[#121226] text-purple-300'}`}>
-                <Moon className="h-4 w-4" /> {isRTL ? 'ليلي' : 'Dark'}
-              </button>
+              <button type="button" aria-pressed={appearance === 'light'} onClick={() => setAppearance('light')} className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold ${appearance === 'light' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Sun className="h-4 w-4" />{isRTL ? 'نهاري' : 'Light'}</button>
+              <button type="button" aria-pressed={appearance === 'dark'} onClick={() => setAppearance('dark')} className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold ${appearance === 'dark' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Moon className="h-4 w-4" />{isRTL ? 'ليلي' : 'Dark'}</button>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* 2. Language & Currency */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 space-y-1.5">
-            <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-              <Globe className="h-4 w-4 text-purple-400" />
-              <span>{isRTL ? 'اللغة' : 'Language'}</span>
+        <section className={sectionClass}>
+          <div className={cardTitle}><Globe className="h-4 w-4 text-[var(--accent)]" />{isRTL ? 'اللغة والعملة' : 'Language & Currency'}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="space-y-1.5"><span className={muted}>{isRTL ? 'لغة التطبيق' : 'App language'}</span>
+              <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value as 'ar' | 'en')} className={fieldClass}><option value="ar">العربية</option><option value="en">English</option></select>
             </label>
-            <select
-              value={state.settings.language}
-              onChange={(e) => onUpdateSettings({ language: e.target.value as any })}
-              className="w-full rounded-xl border border-purple-900/50 bg-[#101026] p-2 text-xs font-bold text-white outline-none"
-            >
-              <option value="ar">🇸🇦 العربية</option>
-              <option value="en">🇬🇧 English</option>
-            </select>
-          </div>
-
-          <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 space-y-1.5">
-            <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-              <DollarSign className="h-4 w-4 text-purple-400" />
-              <span>{isRTL ? 'رمز العملة' : 'Currency'}</span>
+            <label className="space-y-1.5"><span className={muted}>{isRTL ? 'رمز العملة' : 'Currency symbol'}</span>
+              <input value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={8} placeholder="د.أ" className={fieldClass} />
             </label>
-            <input
-              type="text"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              placeholder="ر.س"
-              className="w-full rounded-xl border border-purple-900/50 bg-[#101026] p-2 text-xs font-bold text-white outline-none"
-            />
           </div>
-        </div>
+        </section>
 
-        {/* App lock */}
-        <div className="rounded-2xl border border-purple-900/40 bg-[#171736] p-4 space-y-3">
-          <label className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
-            <Shield className="h-4 w-4 text-purple-400" />
-            <span>{isRTL ? 'قفل وحماية التطبيق' : 'App Security'}</span>
-          </label>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setSecurityType('off')}
-              className={`py-2 rounded-xl text-xs font-bold ${
-                securityType === 'off' ? 'bg-purple-600 text-white' : 'bg-[#101026] text-purple-300'
-              }`}
-            >
-              🔓 {isRTL ? 'معطل' : 'Disabled'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSecurityType('pin')}
-              className={`py-2 rounded-xl text-xs font-bold ${
-                securityType === 'pin' ? 'bg-purple-600 text-white' : 'bg-[#101026] text-purple-300'
-              }`}
-            >
-              🔢 PIN (رمز سري)
-            </button>
+        <section className={sectionClass}>
+          <div className={cardTitle}><Shield className="h-4 w-4 text-[var(--accent)]" />{isRTL ? 'حماية التطبيق' : 'App Security'}</div>
+          <p className={muted}>{isRTL ? 'اختر طريقة القفل. لا يتم تغيير الحماية إلا بعد حفظ الإعدادات.' : 'Choose a lock method. Security changes are applied only after saving.'}</p>
+          <div className="grid grid-cols-3 gap-2">
+            <button type="button" aria-pressed={securityType === 'off'} onClick={() => setSecurityType('off')} className={`rounded-xl border p-2.5 text-xs font-bold ${securityType === 'off' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}>{isRTL ? 'بدون قفل' : 'Off'}</button>
+            <button type="button" aria-pressed={securityType === 'pin'} onClick={() => setSecurityType('pin')} className={`rounded-xl border p-2.5 text-xs font-bold ${securityType === 'pin' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Lock className="inline h-3.5 w-3.5 me-1" />PIN</button>
+            <button type="button" aria-pressed={securityType === 'pattern'} onClick={() => { setSecurityType('pattern'); setPattern([]); setConfirmPattern([]); setPatternStep('create'); }} className={`rounded-xl border p-2.5 text-xs font-bold ${securityType === 'pattern' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Fingerprint className="inline h-3.5 w-3.5 me-1" />{isRTL ? 'نمط' : 'Pattern'}</button>
           </div>
-
-          {securityType === 'pin' && (
-            <div>
-              <label className="text-[11px] text-purple-300 block mb-1">
-                {isRTL ? 'أدخل رمز PIN الجديد (4-6 أرقام)' : 'Enter 4-6 digit PIN'}
-              </label>
-              <input
-                type="password"
-                maxLength={6}
-                value={newPin}
-                onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="1234"
-                className="w-full rounded-xl border border-purple-900/50 bg-[#101026] p-2 text-center text-sm font-black tracking-widest text-white outline-none"
-              />
+          {securityType === 'pin' && <label className="block space-y-1.5"><span className={muted}>{state.security?.type === 'pin' ? (isRTL ? 'اتركه فارغًا للإبقاء على الرمز الحالي، أو أدخل رمزًا جديدًا' : 'Leave blank to keep the current PIN, or enter a new one') : (isRTL ? 'رمز PIN جديد (4–6 أرقام)' : 'New PIN (4–6 digits)')}</span><input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="••••" className={`${fieldClass} text-center tracking-[0.5em]`} /></label>}
+          {securityType === 'pattern' && <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2"><p className={muted}>{patternStep === 'create' ? (isRTL ? 'ارسم النمط: اختر 4 نقاط على الأقل بالترتيب' : 'Create: select at least 4 dots in order') : (isRTL ? 'أعد اختيار النقاط بالترتيب نفسه للتأكيد' : 'Confirm by selecting the same dots in order')}</p><button type="button" onClick={resetPattern} className="text-[11px] font-bold text-[var(--accent)]">{isRTL ? 'مسح' : 'Clear'}</button></div>
+            <div className="mx-auto grid max-w-[230px] grid-cols-3 gap-3 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-4">
+              {Array.from({ length: 9 }, (_, index) => {
+                const active = (patternStep === 'create' ? pattern : confirmPattern).includes(index);
+                const order = (patternStep === 'create' ? pattern : confirmPattern).indexOf(index);
+                return <button key={index} type="button" aria-label={`${isRTL ? 'نقطة' : 'Dot'} ${index + 1}`} aria-pressed={active} onClick={() => addPatternDot(index)} className={`aspect-square rounded-full border-2 text-xs font-black transition-colors ${active ? 'border-[var(--accent)] bg-[var(--accent)] text-white' : 'border-[var(--border-neutral)] bg-[var(--surface)] text-[var(--text-secondary)]'}`}>{active ? order + 1 : ''}</button>;
+              })}
             </div>
-          )}
-        </div>
+            <p className={muted}>{isRTL ? 'النقاط المختارة: ' : 'Selected dots: '}{(patternStep === 'create' ? pattern : confirmPattern).length}</p>
+            {patternStep === 'create' && pattern.length >= 4 && <button type="button" onClick={() => setPatternStep('confirm')} className="w-full rounded-xl bg-[var(--accent)] px-3 py-2.5 text-xs font-bold text-white">{isRTL ? 'متابعة لتأكيد النمط' : 'Continue to confirm pattern'}</button>}
+            {patternStep === 'confirm' && confirmPattern.length >= 4 && <button type="button" onClick={() => { if (pattern.join(',') === confirmPattern.join(',')) setStatusMsg({ text: isRTL ? 'تم تأكيد النمط. اضغط حفظ لتفعيله.' : 'Pattern confirmed. Save to enable it.' }); else { setConfirmPattern([]); showError(isRTL ? 'النمط غير مطابق. أعد التأكيد.' : 'Pattern does not match. Try again.'); } }} className="w-full rounded-xl bg-[var(--accent)] px-3 py-2.5 text-xs font-bold text-white">{isRTL ? 'التحقق من النمط' : 'Verify pattern'}</button>}
+          </div>}
+        </section>
 
-        {/* Save button */}
-        <button
-          type="button"
-          onClick={handleSaveSettings}
-          className="w-full rounded-2xl bg-purple-600 py-3 text-xs font-black text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 active:scale-95"
-        >
-          {isRTL ? 'حفظ الإعدادات' : 'Save Settings'}
-        </button>
+        <footer className="flex gap-2 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--surface)] py-3 text-xs font-bold text-[var(--text-secondary)]">{isRTL ? 'إلغاء' : 'Cancel'}</button>
+          <button type="button" onClick={handleSave} className="flex-1 rounded-xl bg-[var(--accent)] py-3 text-xs font-black text-white shadow-md active:scale-[0.99]">{isRTL ? 'حفظ الإعدادات' : 'Save Settings'}</button>
+        </footer>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AppState } from '../types';
 import { sharingService } from '../services/sharing';
 import { parseAndInspectBackup, BackupInspection, mergeAppState } from '../services/backupParser';
@@ -61,6 +61,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const [importMode, setImportMode] = useState<'replace' | 'merge'>('replace');
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => { if (isOpen) { setActiveTab('export'); setIsConfirming(false); setInspection(null); setParseError(null); setPastedText(''); setFileName(null); setToastMessage(null); setShowRawJSON(false); } }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -217,7 +219,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-fadeIn">
       <div className="flex flex-col w-full max-w-2xl max-h-[92vh] rounded-3xl border border-purple-500/30 bg-[#121229] shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-purple-900/40 bg-[#161633] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-neutral)] bg-[var(--surface)] px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 shadow-md shadow-purple-600/30">
               <Database className="h-5 w-5 text-white" />
@@ -226,7 +228,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               <h2 className="text-base font-black text-white sm:text-lg">
                 {isRTL ? 'مركز النسخ الاحتياطي والاستيراد' : 'Backup & Restore Center'}
               </h2>
-              <p className="text-[11px] text-purple-300/70">
+              <p className="text-[11px] text-[var(--text-secondary)]">
                 {isRTL
                   ? 'حفظ وتصدير بياناتك، أو استيراد ودمج النسخ الاحتياطية'
                   : 'Export & download backups, or import and merge previous datasets'}
@@ -272,7 +274,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
         {/* Notification Toast */}
         {toastMessage && (
-          <div className="mx-6 mt-3 rounded-2xl border border-purple-500/40 bg-purple-950/60 p-2.5 text-center text-xs font-bold text-purple-200 animate-fadeIn">
+          <div className="mx-6 mt-3 rounded-2xl border border-purple-500/40 bg-purple-950/60 p-2.5 text-center text-xs font-bold text-[var(--text-primary)] animate-fadeIn">
             {toastMessage}
           </div>
         )}
@@ -285,21 +287,21 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           {activeTab === 'export' && (
             <div className="space-y-4">
               {/* Quick Summary Card */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-2xl border border-purple-900/40 bg-[#171738] p-4 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-2xl border border-[var(--border-neutral)] bg-[#171738] p-4 text-center">
                 <div className="p-2">
-                  <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'المعاملات' : 'Transactions'}</span>
-                  <span className="text-lg font-black text-purple-200">{state.transactions.length}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'المعاملات' : 'Transactions'}</span>
+                  <span className="text-lg font-black text-[var(--text-primary)]">{state.transactions.length}</span>
                 </div>
                 <div className="p-2">
-                  <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'الأشخاص والديون' : 'Debts & People'}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'الأشخاص والديون' : 'Debts & People'}</span>
                   <span className="text-lg font-black text-pink-400">{state.debts.length}</span>
                 </div>
                 <div className="p-2">
-                  <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'المشاريع والأعمال' : 'Works'}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'المشاريع والأعمال' : 'Works'}</span>
                   <span className="text-lg font-black text-cyan-400">{state.works.length}</span>
                 </div>
                 <div className="p-2">
-                  <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'العملة' : 'Currency'}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'العملة' : 'Currency'}</span>
                   <span className="text-lg font-black text-emerald-400">{state.settings?.currency || 'ر.س'}</span>
                 </div>
               </div>
@@ -350,7 +352,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               {/* Email Backup Dispatch */}
               <div className="rounded-2xl border border-purple-800/40 bg-[#161635] p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-xs font-black text-purple-200">
+                  <span className="flex items-center gap-2 text-xs font-black text-[var(--text-primary)]">
                     <Mail className="h-4 w-4 text-purple-400" />
                     <span>{isRTL ? 'إرسال الملخص المالي عبر البريد الإلكتروني' : 'Email Financial Summary'}</span>
                   </span>
@@ -361,7 +363,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
                     placeholder={isRTL ? "البريد الإلكتروني" : "Email address"}
-                    className="flex-1 rounded-xl border border-purple-800/50 bg-[#0f0f24] px-3 py-2 text-xs text-white placeholder-purple-400/40 outline-none focus:border-purple-400"
+                    className="flex-1 rounded-xl border border-purple-800/50 bg-[var(--surface-muted)] px-3 py-2 text-xs text-white placeholder-purple-400/40 outline-none focus:border-purple-400"
                   />
                   <button
                     type="button"
@@ -376,7 +378,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
               {/* Social Summary Sharing (WhatsApp / Telegram) */}
               <div className="rounded-2xl border border-purple-800/40 bg-[#161635] p-4 space-y-3">
-                <span className="flex items-center gap-2 text-xs font-black text-purple-200">
+                <span className="flex items-center gap-2 text-xs font-black text-[var(--text-primary)]">
                   <MessageCircle className="h-4 w-4 text-emerald-400" />
                   <span>{isRTL ? 'مشاركة التقرير المالي عبر واتساب وتلجرام' : 'Share Financial Statement'}</span>
                 </span>
@@ -400,7 +402,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCopySummary}
-                    className="flex items-center justify-center gap-1.5 rounded-xl border border-purple-700/40 bg-purple-950/30 py-2.5 text-xs font-bold text-purple-200 hover:bg-purple-900/40 active:scale-95"
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-purple-700/40 bg-purple-950/30 py-2.5 text-xs font-bold text-[var(--text-primary)] hover:bg-purple-900/40 active:scale-95"
                   >
                     {copiedSummary ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
                     <span>{isRTL ? 'نسخ الملخص' : 'Copy Text'}</span>
@@ -409,7 +411,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               </div>
 
               {/* Collapsible Raw JSON Viewer */}
-              <div className="rounded-2xl border border-purple-900/40 bg-[#121226] p-3 text-xs">
+              <div className="rounded-2xl border border-[var(--border-neutral)] bg-[#121226] p-3 text-xs">
                 <button
                   type="button"
                   onClick={() => setShowRawJSON(!showRawJSON)}
@@ -427,7 +429,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                       readOnly
                       rows={6}
                       value={jsonString}
-                      className="w-full rounded-xl border border-purple-900/50 bg-[#0a0a16] p-2.5 font-mono text-[10px] text-purple-300 outline-none"
+                      className="w-full rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-2.5 font-mono text-[10px] text-purple-300 outline-none"
                     />
                     <button
                       type="button"
@@ -462,7 +464,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
               </div>
 
               {/* 1. File Upload Selector */}
-              <div className="rounded-2xl border-2 border-dashed border-purple-700/50 bg-[#161633] p-5 text-center transition-all hover:border-cyan-500/70">
+              <div className="rounded-2xl border-2 border-dashed border-purple-700/50 bg-[var(--surface)] p-5 text-center transition-all hover:border-cyan-500/70">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -483,7 +485,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                       ? (isRTL ? `الملف المختار: ${fileName}` : `File: ${fileName}`)
                       : (isRTL ? 'انقر لاختيار ملف نسخة احتياطية (.json / .txt)' : 'Click to choose backup file (.json / .txt)')}
                   </span>
-                  <span className="text-[10px] text-purple-300/60">
+                  <span className="text-[10px] text-[var(--text-secondary)]">
                     {isRTL ? 'أو يمكنك لصق كود النسخة أدناه مباشرة' : 'Or paste the backup text directly below'}
                   </span>
                 </label>
@@ -491,7 +493,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
               {/* 2. Direct Text Paste Area */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-purple-200 flex items-center justify-between">
+                <label className="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <FileText className="h-4 w-4 text-purple-400" />
                     <span>{isRTL ? 'أو الصق نص النسخة الاحتياطية (JSON) هنا:' : 'Or paste backup JSON code here:'}</span>
@@ -523,7 +525,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                       ? 'الصق كود JSON للنسخة الاحتياطية هنا (مثل: {"transactions": [...], ...})'
                       : 'Paste raw JSON backup code here...'
                   }
-                  className="w-full rounded-2xl border border-purple-900/50 bg-[#0f0f24] p-3 font-mono text-xs text-purple-100 placeholder-purple-400/40 outline-none focus:border-cyan-400"
+                  className="w-full rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-3 font-mono text-xs text-purple-100 placeholder-purple-400/40 outline-none focus:border-cyan-400"
                 />
               </div>
 
@@ -560,16 +562,16 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
                   {/* Summary grid */}
                   <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="rounded-xl bg-[#121226]/80 p-2 border border-emerald-900/40">
-                      <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'المعاملات' : 'Transactions'}</span>
+                    <div className="rounded-xl bg-[var(--surface-muted)] p-2 border border-emerald-900/40">
+                      <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'المعاملات' : 'Transactions'}</span>
                       <span className="text-base font-black text-white">{inspection.transactionsCount}</span>
                     </div>
-                    <div className="rounded-xl bg-[#121226]/80 p-2 border border-emerald-900/40">
-                      <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'الديون' : 'Debts'}</span>
+                    <div className="rounded-xl bg-[var(--surface-muted)] p-2 border border-emerald-900/40">
+                      <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'الديون' : 'Debts'}</span>
                       <span className="text-base font-black text-white">{inspection.debtsCount}</span>
                     </div>
-                    <div className="rounded-xl bg-[#121226]/80 p-2 border border-emerald-900/40">
-                      <span className="text-[10px] text-purple-300/70 block">{isRTL ? 'المشاريع' : 'Works'}</span>
+                    <div className="rounded-xl bg-[var(--surface-muted)] p-2 border border-emerald-900/40">
+                      <span className="text-[10px] text-[var(--text-secondary)] block">{isRTL ? 'المشاريع' : 'Works'}</span>
                       <span className="text-base font-black text-white">{inspection.worksCount}</span>
                     </div>
                   </div>
@@ -583,7 +585,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                       {inspection.previewTransactions.map((tx, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between rounded-lg bg-[#0d0d1f] px-2.5 py-1 text-purple-200"
+                          className="flex items-center justify-between rounded-lg bg-[var(--surface-muted)] px-2.5 py-1 text-[var(--text-primary)]"
                         >
                           <span className="truncate max-w-[200px]">{tx.desc}</span>
                           <span className={tx.type === 'income' ? 'text-emerald-400 font-bold' : 'text-pink-400 font-bold'}>
@@ -596,7 +598,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
                   {/* Import Mode: Replace vs Merge */}
                   <div className="space-y-2 border-t border-emerald-800/40 pt-3">
-                    <label className="text-xs font-bold text-purple-200 block">
+                    <label className="text-xs font-bold text-[var(--text-primary)] block">
                       {isRTL ? 'طريقة الاستيراد:' : 'Import Strategy:'}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -606,7 +608,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                         className={`flex items-center justify-center gap-1.5 rounded-xl p-2.5 text-xs font-bold transition-all border ${
                           importMode === 'replace'
                             ? 'border-purple-400 bg-purple-600 text-white shadow-md'
-                            : 'border-purple-900/40 bg-[#14142d] text-purple-300'
+                            : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-purple-300'
                         }`}
                       >
                         <RefreshCw className="h-3.5 w-3.5" />
@@ -619,14 +621,14 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                         className={`flex items-center justify-center gap-1.5 rounded-xl p-2.5 text-xs font-bold transition-all border ${
                           importMode === 'merge'
                             ? 'border-cyan-400 bg-cyan-600 text-white shadow-md'
-                            : 'border-purple-900/40 bg-[#14142d] text-purple-300'
+                            : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-purple-300'
                         }`}
                       >
                         <Layers className="h-3.5 w-3.5" />
                         <span>{isRTL ? 'دمج مع البيانات الحالية' : 'Merge with Current'}</span>
                       </button>
                     </div>
-                    <p className="text-[10px] text-purple-300/60">
+                    <p className="text-[10px] text-[var(--text-secondary)]">
                       {importMode === 'replace'
                         ? (isRTL
                             ? '⚠️ سيتم حذف البيانات الحالية واستبدالها بالنسخة الاحتياطية.'
@@ -662,7 +664,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsConfirming(false)}
-                          className="flex-1 rounded-xl border border-purple-800 bg-[#14142d] py-2 text-xs font-bold text-purple-300"
+                          className="flex-1 rounded-xl border border-purple-800 bg-[var(--surface-muted)] py-2 text-xs font-bold text-purple-300"
                         >
                           {isRTL ? 'تراجع' : 'Cancel'}
                         </button>
