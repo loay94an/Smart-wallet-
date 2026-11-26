@@ -23,6 +23,11 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
+function toLocalDateTimeInput(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
+
 interface WalletPageProps {
   state: AppState;
   onSaveTransaction: (tx: Transaction) => void;
@@ -89,12 +94,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
     setEditingTx(null);
     setFormError('');
     setTxType('expense');
-    const firstExpenseCat = state.categories.find((c) => c.type === 'expense') || state.categories[0];
+    const firstExpenseCat = state.categories.find((c) => c.type === 'expense');
     setTxCategory(firstExpenseCat ? firstExpenseCat.id : '');
     setTxAmount('');
     const now = new Date();
-    const localIso = now.toISOString().slice(0, 16);
-    setTxDate(localIso);
+    setTxDate(toLocalDateTimeInput(now));
     setTxDesc('');
     setIsTxModalOpen(true);
   };
@@ -105,7 +109,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
     setTxType(tx.type);
     setTxCategory(tx.category);
     setTxAmount(String(tx.amount));
-    setTxDate(tx.date.slice(0, 16));
+    setTxDate(toLocalDateTimeInput(new Date(tx.date)));
     setTxDesc(tx.desc || '');
     setIsTxModalOpen(true);
   };
@@ -123,10 +127,21 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       return;
     }
 
+    const selectedCategory = state.categories.find((category) => category.id === txCategory);
+    if (!selectedCategory || selectedCategory.type !== txType) {
+      setFormError(isRTL ? 'الفئة المختارة لا تطابق نوع المعاملة. اختر فئة صحيحة.' : 'The selected category does not match the transaction type. Choose a valid category.');
+      return;
+    }
+
+    if (!txDate || Number.isNaN(new Date(txDate).getTime())) {
+      setFormError(isRTL ? 'يرجى إدخال تاريخ ووقت صحيحين' : 'Please enter a valid date and time');
+      return;
+    }
+
     setFormError('');
     const tx: Transaction = {
       id: editingTx ? editingTx.id : 'tx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      date: txDate ? new Date(txDate).toISOString() : new Date().toISOString(),
+      date: new Date(txDate).toISOString(),
       type: txType,
       category: txCategory,
       amount: amountNum,
