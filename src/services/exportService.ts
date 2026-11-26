@@ -259,7 +259,15 @@ export const exportService = {
 
     const source = state as unknown as Record<string, unknown>;
     for (const [key, value] of Object.entries(source)) {
-      if (Array.isArray(value)) {
+      // Never export local authentication secrets or cloud bearer credentials.
+      if (key === 'security') continue;
+      if (key === 'settings' && value && typeof value === 'object') {
+        const { syncKey: _syncKey, ...safeSettings } = value as Record<string, unknown>;
+        addSheet(label(key), Object.entries(safeSettings).map(([field, fieldValue]) => ({
+          [isRTL ? 'الحقل' : 'Field']: field,
+          [isRTL ? 'القيمة' : 'Value']: fieldValue,
+        })));
+      } else if (Array.isArray(value)) {
         addSheet(label(key), value.map((item, index) => ({
           [isRTL ? 'الرقم' : 'No']: index + 1,
           ...((item && typeof item === 'object') ? item as Record<string, unknown> : { value: item }),
