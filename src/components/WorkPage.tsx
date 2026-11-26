@@ -186,7 +186,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
 
   const getElapsedSeconds = (timer: WorkTimer): number =>
     timer.seconds + (timer.isRunning && timer.startedAt
-      ? Math.max(0, Math.floor((timerNow - timer.startedAt) / 1000))
+      ? Math.max(0, Math.floor((Date.now() - timer.startedAt) / 1000))
       : 0);
 
   const getTimerFor = (workId: string): WorkTimer =>
