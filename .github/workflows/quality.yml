@@ -54,12 +54,12 @@ jobs:
         run: npm run build
       - name: Generate Android project
         run: npx cap add android
-      - name: Generate Android launcher icons
+      - name: Sync Capacitor assets
+        run: npx cap sync android
+      - name: Generate and verify Android launcher icons
         run: |
           python -m pip install --disable-pip-version-check cairosvg pillow
           python scripts/generate-android-icons.py
-      - name: Sync Capacitor assets
-        run: npx cap sync android
       - name: Build debug APK
         run: cd android && ./gradlew assembleDebug --stacktrace
       - name: Upload APK
