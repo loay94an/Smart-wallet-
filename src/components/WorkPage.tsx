@@ -594,8 +594,43 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     return priority(a.id) - priority(b.id);
   });
 
+  // Combined outstanding balance across every work, independent of selection.
+  const allWorksNetRemaining = state.works.reduce((grandTotal, work) => {
+    const earned = state.workLogs
+      .filter((log) => log.workId === work.id)
+      .reduce(
+        (sum, log) =>
+          sum +
+          (work.calculationType === 'piece'
+            ? Number(log.quantity || 0)
+            : Number(log.hours || 0)) *
+            Number(work.rate || 0),
+        0
+      );
+    const received = state.workPayments
+      .filter((payment) => payment.workId === work.id)
+      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    return grandTotal + earned - received;
+  }, 0);
+
   return (
     <div className="space-y-5 pb-20 pt-2">
+      {/* Combined net outstanding for all works — positioned above New Project */}
+      {state.works.length > 0 && (
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 to-teal-950/30 px-4 py-3 shadow-lg">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <span className="block text-[11px] font-bold text-emerald-300">
+                {isRTL ? 'الصافي المتبقي لجميع الأعمال' : 'Total Net Remaining — All Works'}
+              </span>
+              <span className="mt-1 block text-2xl font-black text-emerald-400">
+                {formatCurrency(allWorksNetRemaining, cur)}
+              </span>
+            </div>
+            <Briefcase className="h-7 w-7 shrink-0 text-emerald-400/70" />
+          </div>
+        </div>
+      )}
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
