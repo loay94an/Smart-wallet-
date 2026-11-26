@@ -50,7 +50,9 @@ jobs:
         run: npm install
       - name: Type check
         run: npm run lint
-      - name: Build web application
+      - name: Build web application for Android
+        env:
+          CAPACITOR_BUILD: 'true'
         run: npm run build
       - name: Generate Android project
         run: npx cap add android
