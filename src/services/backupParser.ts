@@ -627,6 +627,7 @@ export function mergeAppState(current: AppState, incoming: AppState): AppState {
     notebooks: mergeById(current.notebooks, incoming.notebooks),
     standardNotes: mergeById(current.standardNotes, incoming.standardNotes),
     mindMaps: mergeById(current.mindMaps, incoming.mindMaps),
+    workTimers: { ...(current.workTimers || {}), ...(incoming.workTimers || {}) },
     exchangeRates: { ...current.exchangeRates, ...incoming.exchangeRates },
     lastUpdated: new Date().toISOString(),
   };
