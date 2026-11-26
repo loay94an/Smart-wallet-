@@ -269,3 +269,38 @@ input::placeholder, textarea::placeholder { color: var(--text-muted) !important;
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+
+
+/* Work section: balanced sizing, spacing and responsive timer controls. */
+.work-page { --work-gap: clamp(.55rem, 2vw, .9rem); }
+.work-page > * { min-width: 0; }
+.work-page button { min-height: 2.5rem; }
+.work-page .work-header-actions { display:flex; align-items:center; gap:.5rem; }
+.work-page .work-timer-card { padding:clamp(.75rem, 2.5vw, 1.1rem); border-radius:1.25rem; }
+.work-page .work-timer-display { font-size:clamp(1.65rem, 7vw, 2.35rem); line-height:1.15; letter-spacing:.04em; font-variant-numeric:tabular-nums; }
+.work-page .work-timer-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; width:min(100%, 28rem); margin-inline:auto; }
+.work-page .work-timer-controls button { justify-content:center; min-height:2.75rem; padding:.65rem .85rem; border-radius:.85rem; white-space:nowrap; }
+.work-page .work-timer-controls button:only-child { grid-column:1 / -1; }
+.work-page .work-quick-add { display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; }
+.work-page .work-quick-add button { min-width:2.65rem; min-height:2.35rem; padding:.45rem .7rem; }
+.work-page .work-work-tabs { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); gap:.55rem; }
+.work-page .work-work-tabs button { min-width:0; min-height:2.75rem; justify-content:center; padding:.6rem .75rem; white-space:normal; overflow-wrap:anywhere; }
+.work-page .work-work-tabs button > span { min-width:0; }
+.work-page .work-work-tabs button > span:nth-child(2) { overflow:hidden; text-overflow:ellipsis; }
+.work-page .work-net-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:.75rem; padding:clamp(.8rem,2.5vw,1.1rem); }
+.work-page .work-net-card .work-net-value { font-size:clamp(1.25rem,5vw,1.75rem); overflow-wrap:anywhere; }
+.work-page input, .work-page select { min-height:2.65rem; }
+.work-page .work-piece-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+.work-page .work-piece-metrics > div { min-width:0; padding:clamp(.65rem,2vw,.9rem); }
+.work-page .work-piece-metrics .work-metric-value { font-size:clamp(1.15rem,5vw,1.55rem); overflow-wrap:anywhere; }
+@media (max-width:380px) {
+  .work-page { gap:1rem; }
+  .work-page .work-timer-controls { gap:.45rem; }
+  .work-page .work-timer-controls button { font-size:.72rem; padding:.6rem .45rem; }
+  .work-page .work-piece-metrics { gap:.45rem; }
+  .work-page .work-quick-add { gap:.35rem; }
+}
+@media (min-width:640px) {
+  .work-page .work-work-tabs { grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); }
+  .work-page .work-timer-controls { grid-template-columns:repeat(2,minmax(8rem,1fr)); }
+}
