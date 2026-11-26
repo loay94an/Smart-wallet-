@@ -4,9 +4,10 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
   return {
-    // GitHub Pages hosts this repository under /Smart-wallet-/. Keep local and Capacitor builds at root.
-    base: process.env.GITHUB_ACTIONS === 'true' ? '/Smart-wallet-/' : '/',
+    // GitHub Pages needs its repository subpath; Android WebView must load assets from the app root.
+    base: process.env.GITHUB_ACTIONS === 'true' && !isCapacitorBuild ? '/Smart-wallet-/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
