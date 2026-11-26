@@ -302,6 +302,69 @@ export const exportService = {
   },
 
   /**
+   * Export all application sections and records into one comprehensive PDF.
+   * Sensitive authentication and cloud credentials are intentionally excluded.
+   */
+  exportFullReportToPDF: async (state: AppState, isRTL: boolean = true) => {
+    const source = state as unknown as Record<string, unknown>;
+    const sections: Array<{ name: string; rows: Array<Record<string, unknown>> }> = [];
+    const label = (key: string) => key;
+    for (const [key, value] of Object.entries(source)) {
+      if (key === 'security') continue;
+      if (key === 'settings' && value && typeof value === 'object') {
+        const { syncKey: _syncKey, ...safeSettings } = value as Record<string, unknown>;
+        sections.push({ name: label(key), rows: Object.entries(safeSettings).map(([field, item]) => ({ field, value: item })) });
+      } else if (Array.isArray(value)) {
+        sections.push({ name: label(key), rows: value.map((item, index) => ({
+          number: index + 1,
+          ...((item && typeof item === 'object') ? item as Record<string, unknown> : { value: item }),
+        })) });
+      } else if (value && typeof value === 'object') {
+        sections.push({ name: label(key), rows: Object.entries(value as Record<string, unknown>).map(([field, item]) => ({ field, value: item })) });
+      }
+    }
+    try {
+      const timerData = typeof localStorage !== 'undefined' ? localStorage.getItem('smart_work_timers_state') : null;
+      if (timerData) {
+        const parsed = JSON.parse(timerData) as Record<string, unknown>;
+        sections.push({ name: isRTL ? 'مؤقتات العمل' : 'Work Timers', rows: Object.entries(parsed).map(([workId, timer]) => ({ workId, timer })) });
+      }
+    } catch (error) {
+      console.warn('Could not include work timers in PDF export:', error);
+    }
+
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-100000px';
+    container.style.top = '0';
+    container.style.width = '1100px';
+    container.style.padding = '28px';
+    container.style.background = '#ffffff';
+    container.style.color = '#172033';
+    container.style.fontFamily = 'Arial, sans-serif';
+    container.dir = isRTL ? 'rtl' : 'ltr';
+    const safe = (value: unknown) => escapeHtml(
+      value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')
+    );
+    const sectionsHtml = sections.map((section) => {
+      const keys = Array.from(new Set(section.rows.flatMap((row) => Object.keys(row))));
+      const header = keys.map((key) => '<th>' + safe(key) + '</th>').join('');
+      const rows = section.rows.length
+        ? section.rows.map((row) => '<tr>' + keys.map((key) => '<td>' + safe(row[key]) + '</td>').join('') + '</tr>').join('')
+        : '<tr><td>' + (isRTL ? 'لا توجد بيانات' : 'No data') + '</td></tr>';
+      return '<section style="margin:0 0 28px;break-inside:avoid"><h2 style="font-size:18px;color:#3346a8;border-bottom:2px solid #dbe2ff;padding:0 0 8px">' + safe(section.name) + '</h2><table style="width:100%;border-collapse:collapse;font-size:10px;table-layout:auto"><thead><tr style="background:#e9edff">' + header + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
+    }).join('');
+    container.innerHTML = '<header style="margin-bottom:28px;border-bottom:3px solid #4657bd;padding-bottom:14px"><h1 style="font-size:26px;margin:0 0 8px;color:#26358b">' + (isRTL ? 'تقرير المحفظة المالية الشامل' : 'Complete Financial Wallet Report') + '</h1><div style="font-size:12px;color:#64748b">' + safe(new Date().toLocaleString(isRTL ? 'ar' : 'en')) + '</div></header>' + sectionsHtml;
+    document.body.appendChild(container);
+    try {
+      const success = await exportService.exportElementToPDF(container, isRTL ? 'تقرير-المحفظة-الشامل' : 'complete-wallet-report');
+      return success;
+    } finally {
+      document.body.removeChild(container);
+    }
+  },
+
+  /**
    * Export an HTML element or Section directly to PDF
    */
   exportElementToPDF: async (element: HTMLElement, filename: string) => {
