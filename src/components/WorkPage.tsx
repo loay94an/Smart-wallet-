@@ -10,6 +10,7 @@ import {
 import { formatCurrency } from '../services/i18n';
 import { ConfirmModal } from './ConfirmModal';
 import { exportService } from '../services/exportService';
+import { saveExportBlob } from '../services/fileExport';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -538,7 +539,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`work-report-${activeWork.name}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      await saveExportBlob(pdf.output('blob'), `work-report-${activeWork.name}-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
       console.error('PDF export error:', e);
     } finally {
@@ -554,13 +555,10 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         useCORS: true,
         backgroundColor: '#0f0f23',
       });
-      const link = document.createElement('a');
-      link.download = `work-summary-${activeWork.name}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const imageBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Could not create PNG')), 'image/png');
+      });
+      await saveExportBlob(imageBlob, `work-summary-${activeWork.name}.png`);
     } catch (e) {
       console.error('PNG export error:', e);
     }
