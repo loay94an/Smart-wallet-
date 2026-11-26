@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 
 /** Save exports through Android's native share sheet instead of unreliable WebView downloads. */
@@ -16,7 +16,6 @@ export async function saveExportBlob(blob: Blob, fileName: string, title = fileN
       path: fileName,
       data: base64,
       directory: Directory.Cache,
-      encoding: Encoding.Base64,
       recursive: true,
     });
     await Share.share({
