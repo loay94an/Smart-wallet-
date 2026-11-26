@@ -174,8 +174,10 @@ body, input, select, textarea, button {
 [class*="stroke-pink-"], [class*="stroke-slate-"] { stroke: #a1a1aa !important; }
 
 /* Neutral placeholders, separators, and primary action buttons. */
-[class*="placeholder-purple-"], [class*="placeholder-emerald-"],
-[class*="placeholder-cyan-"], [class*="placeholder-blue-"]::placeholder {
+[class*="placeholder-purple-"]::placeholder,
+[class*="placeholder-emerald-"]::placeholder,
+[class*="placeholder-cyan-"]::placeholder,
+[class*="placeholder-blue-"]::placeholder {
   color: #a1a1aa !important;
 }
 [class*="divide-purple-"], [class*="divide-emerald-"], [class*="divide-red-"] {
