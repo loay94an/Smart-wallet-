@@ -103,28 +103,25 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const [isExportMenuOpen, setIsExportMenuOpen] = useState<boolean>(false);
   const [isProjectMenuOpen, setIsProjectMenuOpen] = useState<boolean>(false);
 
-  // Timers use a persisted wall-clock checkpoint so elapsed time survives app closure.
-  type WorkTimer = { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null; lastTickAt: number | null };
+  // Elapsed time is derived from an absolute timestamp, so it survives WebView suspension/closure.
+  type WorkTimer = { seconds: number; isRunning: boolean; pieces: number; startTime: Date | null; startedAt: number | null };
   const [workTimers, setWorkTimers] = useState<Record<string, WorkTimer>>(() => {
     try {
       const saved = localStorage.getItem('smart_work_timers_state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const now = Date.now();
         const result: Record<string, WorkTimer> = {};
         for (const [k, v] of Object.entries(parsed)) {
           const val = v as any;
           const isRunning = Boolean(val.isRunning);
-          const lastTickAt = val.lastTickAt ? Number(val.lastTickAt) : null;
-          const offlineSeconds = isRunning && lastTickAt
-            ? Math.max(0, Math.floor((now - lastTickAt) / 1000))
-            : 0;
+          // Migrate old lastTickAt records while preserving their accumulated seconds.
+          const startedAt = isRunning ? (Number(val.startedAt) || Number(val.lastTickAt) || Date.now()) : null;
           result[k] = {
-            seconds: (Number(val.seconds) || 0) + offlineSeconds,
+            seconds: Math.max(0, Number(val.seconds) || 0),
             isRunning,
-            pieces: Number(val.pieces) || 0,
+            pieces: Math.max(0, Number(val.pieces) || 0),
             startTime: val.startTime ? new Date(val.startTime) : null,
-            lastTickAt: isRunning ? now : null,
+            startedAt,
           };
         }
         return result;
@@ -135,37 +132,37 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     return {};
   });
 
-  // Custom pieces input state
+  // This clock only refreshes the display; elapsed time is calculated from startedAt.
+  const [timerNow, setTimerNow] = useState<number>(() => Date.now());
   const [customPiecesInput, setCustomPiecesInput] = useState<string>('');
 
-  // Restore timer data when a backup is imported or replaced.
+  // Normalize timers restored from imported backups (including legacy checkpoints).
   useEffect(() => {
     if (!state.workTimers) return;
-    const restoredAt = Date.now();
     const restored = Object.fromEntries(Object.entries(state.workTimers).map(([id, value]: [string, any]) => {
       const running = Boolean(value?.isRunning);
-      const checkpoint = value?.lastTickAt ? Number(value.lastTickAt) : null;
-      const offline = running && checkpoint ? Math.max(0, Math.floor((restoredAt - checkpoint) / 1000)) : 0;
-      return [id, { ...value, seconds: (Number(value?.seconds) || 0) + offline, startTime: value?.startTime ? new Date(value.startTime) : null, lastTickAt: running ? restoredAt : null }];
+      const startedAt = running ? (Number(value?.startedAt) || Number(value?.lastTickAt) || Date.now()) : null;
+      return [id, {
+        ...value,
+        seconds: Math.max(0, Number(value?.seconds) || 0),
+        pieces: Math.max(0, Number(value?.pieces) || 0),
+        startTime: value?.startTime ? new Date(value.startTime) : null,
+        isRunning: running,
+        startedAt,
+      }];
     }));
     setWorkTimers(restored as Record<string, WorkTimer>);
-    try {
-      localStorage.setItem('smart_work_timers_state', JSON.stringify(state.workTimers));
-    } catch (error) {
-      console.error('Failed to restore imported work timers:', error);
-    }
   }, [state.workTimers]);
 
-  // Persist checkpoints frequently; the last checkpoint lets us recover time after force-close.
-  // Persist workTimers to localStorage on changes
+  // Persist meaningful timer changes. Accuracy no longer depends on a background interval.
   useEffect(() => {
     try {
       const serialized: Record<string, any> = {};
       for (const [k, v] of Object.entries(workTimers)) {
         serialized[k] = {
           ...v,
-          startTime: v.startTime ? (v.startTime instanceof Date ? v.startTime.toISOString() : v.startTime) : null,
-          lastTickAt: v.lastTickAt ?? null,
+          startTime: v.startTime ? v.startTime.toISOString() : null,
+          startedAt: v.startedAt ?? null,
         };
       }
       localStorage.setItem('smart_work_timers_state', JSON.stringify(serialized));
@@ -174,43 +171,40 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     }
   }, [workTimers]);
 
+  // Refresh the visible clock every second and immediately when the app returns.
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setWorkTimers((prev) => {
-        let changed = false;
-        const updated = { ...prev };
-        for (const workId of Object.keys(updated)) {
-          const timer = updated[workId];
-          if (!timer?.isRunning) continue;
-          const checkpoint = timer.lastTickAt ?? now;
-          const elapsed = Math.max(0, Math.floor((now - checkpoint) / 1000));
-          if (elapsed > 0 || timer.lastTickAt == null) {
-            changed = true;
-            updated[workId] = { ...timer, seconds: timer.seconds + elapsed, lastTickAt: now };
-          }
-        }
-        return changed ? updated : prev;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => setTimerNow(Date.now()), 1000);
+    const refresh = () => setTimerNow(Date.now());
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+    };
   }, []);
 
-  const getTimerFor = (workId: string): WorkTimer =>
-    workTimers[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
+  const getElapsedSeconds = (timer: WorkTimer): number =>
+    timer.seconds + (timer.isRunning && timer.startedAt
+      ? Math.max(0, Math.floor((timerNow - timer.startedAt) / 1000))
+      : 0);
 
-  const currentTimer = activeWork ? getTimerFor(activeWork.id) : { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
+  const getTimerFor = (workId: string): WorkTimer =>
+    workTimers[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null };
+
+  const currentTimerBase = activeWork ? getTimerFor(activeWork.id) : { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null };
+  const currentTimer = { ...currentTimerBase, seconds: getElapsedSeconds(currentTimerBase) };
 
   const startTimer = (workId: string) => {
     setWorkTimers((prev) => {
-      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
+      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null };
       return {
         ...prev,
         [workId]: {
           ...current,
           isRunning: true,
           startTime: current.startTime || new Date(),
-          lastTickAt: Date.now(),
+          startedAt: current.isRunning && current.startedAt ? current.startedAt : Date.now(),
         },
       };
     });
@@ -225,8 +219,8 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         [workId]: {
           ...current,
           isRunning: false,
-          seconds: current.seconds + (current.lastTickAt ? Math.max(0, Math.floor((Date.now() - current.lastTickAt) / 1000)) : 0),
-          lastTickAt: null,
+          seconds: current.seconds + (current.startedAt ? Math.max(0, Math.floor((Date.now() - current.startedAt) / 1000)) : 0),
+          startedAt: null,
         },
       };
     });
@@ -235,7 +229,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const addPieces = (workId: string, amount: number) => {
     if (isNaN(amount) || amount <= 0) return;
     setWorkTimers((prev) => {
-      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
+      const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null };
       return {
         ...prev,
         [workId]: {
@@ -261,7 +255,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
       isDanger: true,
       onConfirm: () => {
         setWorkTimers((prev) => {
-          const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null };
+          const current = prev[workId] || { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null };
           return {
             ...prev,
             [workId]: {
@@ -287,7 +281,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     const current = workTimers[workId];
     if (!current) return;
 
-    const hours = (current.seconds / 3600).toFixed(2);
+    const hours = (getElapsedSeconds(current) / 3600).toFixed(2);
     const hoursNum = parseFloat(hours);
 
     const log: WorkLog = {
@@ -313,7 +307,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     // Reset this work's timer
     setWorkTimers((prev) => ({
       ...prev,
-      [workId]: { seconds: 0, isRunning: false, pieces: 0, startTime: null, lastTickAt: null },
+      [workId]: { seconds: 0, isRunning: false, pieces: 0, startTime: null, startedAt: null },
     }));
   };
 
@@ -740,7 +734,8 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {state.works.map((w) => {
             const isSelected = w.id === selectedWorkId;
-            const wTimer = workTimers[w.id];
+            const wTimerBase = workTimers[w.id];
+            const wTimer = wTimerBase ? { ...wTimerBase, seconds: getElapsedSeconds(wTimerBase) } : undefined;
             const isThisRunning = wTimer?.isRunning;
             return (
               <div
