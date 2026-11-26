@@ -51,6 +51,7 @@ interface WorkPageProps {
   onSaveWorkGoal: (goal: WorkGoal) => void;
   onDeleteWorkGoal: (id: string) => void;
   language: 'ar' | 'en';
+  onSaveWorkTimers: (timers: Record<string, { seconds: number; isRunning: boolean; pieces: number; startTime: string | null; startedAt: number | null }>) => void;
 }
 
 export const WorkPage: React.FC<WorkPageProps> = ({
@@ -63,6 +64,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   onDeleteWorkPayment,
   onSaveWorkGoal,
   onDeleteWorkGoal,
+  onSaveWorkTimers,
   language,
 }) => {
   const isRTL = language === 'ar';
@@ -135,10 +137,14 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const [, setTimerNow] = useState<number>(() => Date.now());
   const [customPiecesInput, setCustomPiecesInput] = useState<string>('');
 
-  // Normalize timers restored from imported backups (including legacy checkpoints).
+  // Restore timers from IndexedDB only when it contains actual timer records.
+  // An empty workTimers object is the legacy/default value and must never erase
+  // a valid timer recovered from localStorage.
   useEffect(() => {
-    if (!state.workTimers) return;
-    const restored = Object.fromEntries(Object.entries(state.workTimers).map(([id, value]: [string, any]) => {
+    const savedTimers = state.workTimers;
+    if (!savedTimers || Object.keys(savedTimers).length === 0) return;
+
+    const restored = Object.fromEntries(Object.entries(savedTimers).map(([id, value]: [string, any]) => {
       const running = Boolean(value?.isRunning);
       const startedAt = running ? (Number(value?.startedAt) || Number(value?.lastTickAt) || Date.now()) : null;
       return [id, {
@@ -149,25 +155,41 @@ export const WorkPage: React.FC<WorkPageProps> = ({
         isRunning: running,
         startedAt,
       }];
-    }));
-    setWorkTimers(restored as Record<string, WorkTimer>);
+    })) as Record<string, WorkTimer>;
+
+    const serialize = (timers: Record<string, WorkTimer>) => Object.fromEntries(
+      Object.entries(timers).map(([id, timer]) => [id, {
+        seconds: timer.seconds,
+        isRunning: timer.isRunning,
+        pieces: timer.pieces,
+        startTime: timer.startTime ? timer.startTime.toISOString() : null,
+        startedAt: timer.startedAt ?? null,
+      }])
+    );
+    if (JSON.stringify(serialize(restored)) !== JSON.stringify(serialize(workTimers))) {
+      setWorkTimers(restored);
+    }
   }, [state.workTimers]);
 
-  // Persist meaningful timer changes. Accuracy no longer depends on a background interval.
+  // Persist timers to both the WebView's local storage and the app's IndexedDB state.
+  // The absolute startedAt timestamp keeps elapsed time correct after process death.
   useEffect(() => {
+    const serialized: Record<string, any> = {};
+    for (const [k, v] of Object.entries(workTimers)) {
+      serialized[k] = {
+        seconds: v.seconds,
+        isRunning: v.isRunning,
+        pieces: v.pieces,
+        startTime: v.startTime ? v.startTime.toISOString() : null,
+        startedAt: v.startedAt ?? null,
+      };
+    }
     try {
-      const serialized: Record<string, any> = {};
-      for (const [k, v] of Object.entries(workTimers)) {
-        serialized[k] = {
-          ...v,
-          startTime: v.startTime ? v.startTime.toISOString() : null,
-          startedAt: v.startedAt ?? null,
-        };
-      }
       localStorage.setItem('smart_work_timers_state', JSON.stringify(serialized));
     } catch (e) {
-      console.error('Failed to save timers to storage:', e);
+      console.error('Failed to save timers to local storage:', e);
     }
+    onSaveWorkTimers(serialized);
   }, [workTimers]);
 
   // Refresh the visible clock every second and immediately when the app returns.
