@@ -292,14 +292,17 @@ export function parseAndInspectBackup(input: string | object): {
           let cat = t.category || t.cat || t.التصنيف || t.القسم || t.الفئة;
           // If category is a name not an id, find or add to categories
           if (cat) {
-            const foundCat = categories.find((c) => c.id === cat || c.name === cat);
-            if (foundCat) {
+            const foundById = categories.find((category) => category.id === String(cat));
+            const foundCat = categories.find((category) => category.type === type && category.name.trim() === String(cat).trim());
+            if (foundById?.type === type) {
+              cat = foundById.id;
+            } else if (foundCat) {
               cat = foundCat.id;
             } else {
               const newCatId = `cat_auto_${idx}_${Date.now().toString(36)}`;
               categories.push({
                 id: newCatId,
-                name: String(cat),
+                name: foundById ? foundById.name : String(cat),
                 type,
               });
               cat = newCatId;
