@@ -20,6 +20,7 @@ import {
   FileText,
   MoreVertical,
   ChevronDown,
+  PieChart,
 } from 'lucide-react';
 
 interface DashboardProps {
