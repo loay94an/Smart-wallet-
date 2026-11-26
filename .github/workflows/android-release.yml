@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            echo "ref=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
             echo "tag=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
             echo "ref=${GITHUB_REF}" >> "$GITHUB_OUTPUT"
