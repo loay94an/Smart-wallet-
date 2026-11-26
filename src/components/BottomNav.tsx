@@ -1,7 +1,7 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, Briefcase, PieChart, Wrench } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, BriefcaseBusiness, MoreHorizontal } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'wallet' | 'people' | 'work' | 'info' | 'tools';
+export type NavTab = 'dashboard' | 'wallet' | 'people' | 'work' | 'info' | 'tools' | 'more';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -11,55 +11,31 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, language }) => {
   const isRTL = language === 'ar';
-
   const tabs: { id: NavTab; label: string; icon: React.ReactNode }[] = [
-    {
-      id: 'dashboard',
-      label: isRTL ? 'الرئيسية' : 'Home',
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    },
-    {
-      id: 'wallet',
-      label: isRTL ? 'المحفظة' : 'Wallet',
-      icon: <Receipt className="h-5 w-5" />,
-    },
-    {
-      id: 'work',
-      label: isRTL ? 'العمل' : 'Work',
-      icon: <Briefcase className="h-5 w-5" />,
-    },
-    {
-      id: 'info',
-      label: isRTL ? 'المعلومات' : 'Hub',
-      icon: <PieChart className="h-5 w-5" />,
-    },
-    {
-      id: 'tools',
-      label: isRTL ? 'الأدوات والمفكرة' : 'Tools & Notes',
-      icon: <Wrench className="h-5 w-5" />,
-    },
+    { id: 'dashboard', label: isRTL ? 'الرئيسية' : 'Home', icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: 'wallet', label: isRTL ? 'المعاملات' : 'Wallet', icon: <Receipt className="h-5 w-5" /> },
+    { id: 'people', label: isRTL ? 'الأشخاص' : 'People', icon: <Users className="h-5 w-5" /> },
+    { id: 'work', label: isRTL ? 'العمل' : 'Work', icon: <BriefcaseBusiness className="h-5 w-5" /> },
+    { id: 'more', label: isRTL ? 'المزيد' : 'More', icon: <MoreHorizontal className="h-5 w-5" /> },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-purple-900/40 bg-[#0d0d1e]/95 backdrop-blur-xl px-2 py-1.5 shadow-2xl">
-      <div className="mx-auto flex max-w-lg items-center justify-between">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-purple-900/30 bg-[var(--surface)]/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5 shadow-lg backdrop-blur-xl" aria-label={isRTL ? 'التنقل الرئيسي' : 'Main navigation'}>
+      <div className="mx-auto flex max-w-xl items-center justify-around gap-1">
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = activeTab === tab.id || (tab.id === 'more' && activeTab === 'tools');
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-1 flex-col items-center justify-center rounded-xl py-1.5 transition-all duration-200 ${
-                isActive
-                  ? 'bg-purple-600/20 text-purple-400 font-extrabold shadow-sm'
-                  : 'text-purple-300/60 hover:text-purple-200'
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition-colors active:scale-95 ${
+                isActive ? 'bg-[var(--accent-soft)] font-extrabold text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]'
               }`}
             >
-              <div className={`transition-transform duration-200 ${isActive ? 'scale-110 text-purple-400' : ''}`}>
-                {tab.icon}
-              </div>
-              <span className="mt-1 text-[11px] font-bold">{tab.label}</span>
+              {tab.icon}
+              <span className="truncate text-[10px] sm:text-[11px]">{tab.label}</span>
             </button>
           );
         })}

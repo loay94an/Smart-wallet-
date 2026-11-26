@@ -34,6 +34,7 @@ import { PeoplePage } from './components/PeoplePage';
 import { WorkPage } from './components/WorkPage';
 import { InfoHubPage } from './components/InfoHubPage';
 import { ToolsPage } from './components/ToolsPage';
+import { MoreHub } from './components/MoreHub';
 import { NotebooksPage } from './components/NotebooksPage';
 import { LockScreen } from './components/LockScreen';
 import { CloudSyncModal } from './components/CloudSyncModal';
@@ -50,6 +51,7 @@ export default function App() {
   const [hasLoadedState, setHasLoadedState] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [openAddTransactionOnWallet, setOpenAddTransactionOnWallet] = useState(false);
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Modals
@@ -93,11 +95,33 @@ export default function App() {
     initApp();
   }, []);
 
-  // Sync to IndexedDB whenever state changes
+  // Persist changes without serializing large wallet data on every keystroke.
+  // Flush immediately when Android backgrounds the WebView or the page is being closed.
   useEffect(() => {
-    if (isLoaded && hasLoadedState) {
-      dbService.saveState(state).catch((err) => console.error('تعذر حفظ بيانات المحفظة:', err));
-    }
+    if (!isLoaded || !hasLoadedState) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const persist = () => {
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      dbService.saveState(state).catch((err) => {
+        console.error('تعذر حفظ بيانات المحفظة:', err);
+      });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') persist();
+    };
+    const onPageHide = () => persist();
+
+    timer = setTimeout(persist, 650);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
+    };
   }, [state, isLoaded, hasLoadedState]);
 
   // Apply the selected color palette and light/dark appearance.
@@ -571,7 +595,7 @@ export default function App() {
           <Dashboard
             state={state}
             onNavigate={(tab) => setActiveTab(tab)}
-            onOpenAddTransaction={() => setActiveTab('wallet')}
+            onOpenAddTransaction={() => { setOpenAddTransactionOnWallet(true); setActiveTab('wallet'); }}
             onOpenAddPerson={() => setActiveTab('people')}
             onOpenAddWork={() => setActiveTab('work')}
             language={lang}
@@ -581,6 +605,7 @@ export default function App() {
         {activeTab === 'wallet' && (
           <WalletPage
             state={state}
+            openAddTransactionOnMount={openAddTransactionOnWallet}
             onSaveTransaction={handleSaveTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onAddCategory={handleAddCategory}
@@ -630,6 +655,14 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'more' && (
+          <MoreHub
+            onOpenWork={() => setActiveTab('work')}
+            onOpenTools={() => setActiveTab('tools')}
+            language={lang}
+          />
+        )}
+
         {activeTab === 'tools' && (
           <ToolsPage
             state={state}
@@ -645,7 +678,7 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <BottomNav
         activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
+        onTabChange={(tab) => { setOpenAddTransactionOnWallet(false); setActiveTab(tab); }}
         language={lang}
       />
 
