@@ -245,33 +245,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 )}
 
-                {/* Section 3: Tools & Sharing */}
-                <div className="px-1 py-1 space-y-1 border-t border-purple-900/30">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-purple-400/80 px-2 pt-1">
-                    {isRTL ? 'الأدوات والمشاركة' : 'Tools & Share'}
-                  </div>
-
-                                    {/* Share Report */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      onOpenShare();
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-bold text-pink-300 hover:bg-pink-950/40 hover:text-white transition-all text-start"
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500/20 text-pink-400">
-                      <Share2 className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs font-extrabold">{isRTL ? 'مشاركة التقرير السريع' : 'Quick Share Report'}</div>
-                      <div className="text-[10px] text-pink-300/70 font-normal">
-                        {isRTL ? 'واتساب، تلجرام، بريد إلكتروني' : 'WhatsApp, Telegram, Email'}
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
                 {/* Section 4: Settings & Security */}
                 <div className="px-1 py-1 space-y-1 border-t border-purple-900/30">
                   <button
