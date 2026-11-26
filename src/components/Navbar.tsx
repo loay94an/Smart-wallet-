@@ -7,6 +7,7 @@ import {
   Lock,
   Database,
   Download,
+  Upload,
   Menu,
   ChevronDown,
   FileSpreadsheet,
