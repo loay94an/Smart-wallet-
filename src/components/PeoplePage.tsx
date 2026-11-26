@@ -734,26 +734,7 @@ export const PeoplePage: React.FC<PeoplePageProps> = ({
                         type="button"
                         onClick={() => {
                           setIsOverallOptionsOpen(false);
-                          const items = state.people.map((p) => {
-                            const rep = getPersonReport(p.id);
-                            return {
-                              title: p.name,
-                              subtitle: p.phone || p.email || (isRTL ? 'لا توجد بيانات اتصال' : 'No contact info'),
-                              amount: formatCurrency(rep.net, cur),
-                              extra: rep.statusText,
-                            };
-                          });
-                          exportService.exportSectionReportPDF(
-                            isRTL ? 'تقرير الحسابات والديون' : 'Debts & Accounts Report',
-                            state,
-                            items,
-                            [
-                              { label: isRTL ? 'إجمالي الديون عليك' : 'Total Debts You Owe', value: formatCurrency(summary.allDebts, cur) },
-                              { label: isRTL ? 'إجمالي المستحقات لك' : 'Total Receivables', value: formatCurrency(summary.allReceivables, cur) },
-                              { label: isRTL ? 'الصافي العام' : 'Net Total', value: formatCurrency(summary.net, cur) },
-                            ],
-                            isRTL
-                          );
+                          void exportService.exportPeopleReportPDF(state, isRTL);
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-purple-200 hover:bg-purple-900/40 rounded-xl transition-all"
                       >
