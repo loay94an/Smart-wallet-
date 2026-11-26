@@ -441,21 +441,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
   const totalReceived = activePayments.reduce((s, p) => s + Number(p.amount), 0);
   const netDueRemaining = totalGrossEarned - totalReceived;
 
-  // Aggregate outstanding dues across every work item, not just the selected one.
-  const allWorksGrossEarned = state.workLogs.reduce((total, log) => {
-    const work = state.works.find((item) => item.id === log.workId);
-    if (!work) return total;
-    const units = work.calculationType === 'piece'
-      ? Number(log.quantity || 0)
-      : Number(log.hours || 0);
-    return total + units * Number(work.rate || 0);
-  }, 0);
-  const allWorksPaymentsReceived = state.workPayments.reduce(
-    (total, payment) => total + Number(payment.amount || 0),
-    0
-  );
-  const allWorksNetDueRemaining = allWorksGrossEarned - allWorksPaymentsReceived;
-
   const remainingWorkUnits = activeWork && activeWork.rate > 0 ? netDueRemaining / activeWork.rate : 0;
 
   // Productivity metrics
@@ -676,75 +661,6 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Active Multi-Timers Summary Bar (shows when any timers are running concurrently) */}
-      {(() => {
-        const running = state.works.filter((w) => workTimers[w.id]?.isRunning);
-        if (running.length === 0) return null;
-        return (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3 shadow-lg animate-fadeIn">
-            <div className="flex items-center justify-between mb-2">
-              <span className="flex items-center gap-2 text-xs font-black text-emerald-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>
-                  {isRTL
-                    ? `المؤقتات النشطة المتزامنة (${running.length} ${running.length > 1 ? 'مشاريع تعمل معاً' : 'مشروع يعمل'})`
-                    : `Simultaneous Active Timers (${running.length} running)`}
-                </span>
-              </span>
-              <span className="text-[10px] text-emerald-300/70 font-bold">
-                {isRTL ? 'تعمل في الخلفية معاً' : 'Running concurrently'}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {running.map((w) => {
-                const t = workTimers[w.id];
-                const isCurrent = w.id === selectedWorkId;
-                return (
-                  <div
-                    key={w.id}
-                    onClick={() => setSelectedWorkId(w.id)}
-                    className={`flex items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border ${
-                      isCurrent
-                        ? 'border-emerald-400 bg-emerald-600/30 text-white shadow-sm'
-                        : 'border-emerald-800/40 bg-[#161f30] text-emerald-300 hover:border-emerald-600'
-                    }`}
-                  >
-                    <span>{w.name}:</span>
-                    <span className="font-mono font-black text-emerald-400">{formatTimer(t?.seconds || 0)}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        pauseTimer(w.id);
-                      }}
-                      title={isRTL ? 'إيقاف مؤقت' : 'Pause'}
-                      className="p-1 text-amber-300 hover:text-white rounded hover:bg-amber-500/20"
-                    >
-                      <Pause className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        stopAndSaveTimer(w.id, w);
-                      }}
-                      title={isRTL ? 'إنهاء وحفظ' : 'Stop & Save'}
-                      className="p-1 text-red-400 hover:text-white rounded hover:bg-red-500/20"
-                    >
-                      <Square className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Work Tabs */}
       {state.works.length > 0 && (
@@ -1474,6 +1390,75 @@ export const WorkPage: React.FC<WorkPageProps> = ({
           <p>{isRTL ? 'لا توجد مشاريع مضافة حتى الآن' : 'No projects added yet'}</p>
         </div>
       )}
+
+      {/* Active Multi-Timers Summary Bar (shows when any timers are running concurrently) */}
+      {(() => {
+        const running = state.works.filter((w) => workTimers[w.id]?.isRunning);
+        if (running.length === 0) return null;
+        return (
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3 shadow-lg animate-fadeIn">
+            <div className="flex items-center justify-between mb-2">
+              <span className="flex items-center gap-2 text-xs font-black text-emerald-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>
+                  {isRTL
+                    ? `المؤقتات النشطة المتزامنة (${running.length} ${running.length > 1 ? 'مشاريع تعمل معاً' : 'مشروع يعمل'})`
+                    : `Simultaneous Active Timers (${running.length} running)`}
+                </span>
+              </span>
+              <span className="text-[10px] text-emerald-300/70 font-bold">
+                {isRTL ? 'تعمل في الخلفية معاً' : 'Running concurrently'}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {running.map((w) => {
+                const t = workTimers[w.id];
+                const isCurrent = w.id === selectedWorkId;
+                return (
+                  <div
+                    key={w.id}
+                    onClick={() => setSelectedWorkId(w.id)}
+                    className={`flex items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border ${
+                      isCurrent
+                        ? 'border-emerald-400 bg-emerald-600/30 text-white shadow-sm'
+                        : 'border-emerald-800/40 bg-[#161f30] text-emerald-300 hover:border-emerald-600'
+                    }`}
+                  >
+                    <span>{w.name}:</span>
+                    <span className="font-mono font-black text-emerald-400">{formatTimer(t?.seconds || 0)}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        pauseTimer(w.id);
+                      }}
+                      title={isRTL ? 'إيقاف مؤقت' : 'Pause'}
+                      className="p-1 text-amber-300 hover:text-white rounded hover:bg-amber-500/20"
+                    >
+                      <Pause className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        stopAndSaveTimer(w.id, w);
+                      }}
+                      title={isRTL ? 'إنهاء وحفظ' : 'Stop & Save'}
+                      className="p-1 text-red-400 hover:text-white rounded hover:bg-red-500/20"
+                    >
+                      <Square className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Add / Edit Project Modal */}
       {isWorkModalOpen && (
