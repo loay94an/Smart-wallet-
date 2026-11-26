@@ -442,7 +442,7 @@ export function parseAndInspectBackup(input: string | object): {
     const rawSecurity = !isArrayFormat ? root.security || {} : {};
     const security = {
       enabled: Boolean(rawSecurity.enabled),
-      type: (rawSecurity.type === 'pin' ? 'pin' : 'off') as 'off' | 'pin' | 'pattern',
+      type: (rawSecurity.type === 'pin' ? 'pin' : rawSecurity.type === 'pattern' ? 'pattern' : 'off') as 'off' | 'pin' | 'pattern',
       pin: rawSecurity.pin ? String(rawSecurity.pin) : '',
       pinSalt: rawSecurity.pinSalt ? String(rawSecurity.pinSalt) : '',
       pinHash: rawSecurity.pinHash ? String(rawSecurity.pinHash) : '',
