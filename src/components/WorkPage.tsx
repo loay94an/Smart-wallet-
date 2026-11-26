@@ -566,6 +566,17 @@ export const WorkPage: React.FC<WorkPageProps> = ({
     }
   };
 
+  const exportAllWorksPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await exportService.exportAllWorksReportPDF(state, isRTL);
+    } catch (e) {
+      console.error('PDF export error:', e);
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   const exportPNG = async () => {
     if (!activeWork || !reportRef.current) return;
     try {
@@ -656,7 +667,7 @@ export const WorkPage: React.FC<WorkPageProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      exportPDF();
+                      exportAllWorksPDF();
                       setIsExportMenuOpen(false);
                     }}
                     disabled={isExportingPDF}
