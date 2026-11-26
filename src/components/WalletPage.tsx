@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppState, Transaction, Category } from '../types';
 import { formatCurrency } from '../services/i18n';
 import { ConfirmModal } from './ConfirmModal';
@@ -31,6 +31,7 @@ function toLocalDateTimeInput(date: Date): string {
 
 interface WalletPageProps {
   state: AppState;
+  openAddTransactionOnMount?: boolean;
   onSaveTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (id: string) => void;
   onAddCategory: (category: Omit<Category, 'id'>) => string;
@@ -41,6 +42,7 @@ interface WalletPageProps {
 
 export const WalletPage: React.FC<WalletPageProps> = ({
   state,
+  openAddTransactionOnMount = false,
   onSaveTransaction,
   onDeleteTransaction,
   onAddCategory,
@@ -103,6 +105,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({
     setTxDesc('');
     setIsTxModalOpen(true);
   };
+
+  useEffect(() => {
+    if (openAddTransactionOnMount) openNewTxModal();
+  }, [openAddTransactionOnMount]);
 
   const openEditTxModal = (tx: Transaction) => {
     setEditingTx(tx);
