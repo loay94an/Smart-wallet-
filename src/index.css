@@ -160,3 +160,15 @@ body, input, select, textarea, button {
   animation: none !important;
   box-shadow: 0 2px 10px rgb(24 24 27 / 0.08) !important;
 }
+
+/* SVG icon fills and strokes also follow the monochrome palette. */
+[class*="fill-purple-"], [class*="fill-indigo-"], [class*="fill-blue-"],
+[class*="fill-cyan-"], [class*="fill-teal-"], [class*="fill-green-"],
+[class*="fill-emerald-"], [class*="fill-red-"], [class*="fill-rose-"],
+[class*="fill-orange-"], [class*="fill-amber-"], [class*="fill-yellow-"],
+[class*="fill-pink-"], [class*="fill-slate-"] { fill: #52525b !important; }
+[class*="stroke-purple-"], [class*="stroke-indigo-"], [class*="stroke-blue-"],
+[class*="stroke-cyan-"], [class*="stroke-teal-"], [class*="stroke-green-"],
+[class*="stroke-emerald-"], [class*="stroke-red-"], [class*="stroke-rose-"],
+[class*="stroke-orange-"], [class*="stroke-amber-"], [class*="stroke-yellow-"],
+[class*="stroke-pink-"], [class*="stroke-slate-"] { stroke: #a1a1aa !important; }
