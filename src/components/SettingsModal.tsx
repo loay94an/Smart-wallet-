@@ -33,6 +33,7 @@ interface SettingsModalProps {
 const normalizeTheme = (value?: string): string => ({ purple: 'mono', blue: 'ocean', green: 'emerald', red: 'rose', orange: 'amber', pink: 'rose' } as Record<string, string>)[value || ''] || value || 'mono';
 
 const THEME_OPTIONS = [
+  { id: 'navy-emerald', nameAr: 'كحلي وزمردي', nameEn: 'Navy & Emerald', color: '#0F172A', secondary: '#10B981' },
   { id: 'mono', nameAr: 'أحادي', nameEn: 'Monochrome', color: '#27272a', secondary: '#a1a1aa' },
   { id: 'ocean', nameAr: 'أزرق محيطي', nameEn: 'Ocean Blue', color: '#087eaa', secondary: '#38bdf8' },
   { id: 'emerald', nameAr: 'أخضر زمردي', nameEn: 'Emerald', color: '#07845b', secondary: '#34d399' },
@@ -70,7 +71,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTheme(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'mono'));
+      setActiveTheme(state.settings?.theme === 'purple' ? 'mono' : (state.settings?.theme || 'navy-emerald'));
       setAppearance(state.settings?.appearance || 'light');
       setCurrency(state.settings?.currency || 'ر.س');
       setUserEmail(state.settings?.userEmail === 'loay94an@gmail.com' ? '' : (state.settings?.userEmail || ''));
@@ -96,6 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     try {
       onUpdateSettings({
       theme: activeTheme,
+      appearance,
       currency: currency.trim() || 'ر.س',
       userEmail: userEmail.trim(),
     });
