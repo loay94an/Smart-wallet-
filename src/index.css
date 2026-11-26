@@ -24,6 +24,12 @@
   --text-muted: #94A3B8;
   --border-neutral: #E2E8F0;
   --shadow-neutral: rgb(24 24 27 / 0.08);
+  /* Smart overview chart colors follow the active palette accent in both modes. */
+  --overview-income: var(--accent);
+  --overview-expense: color-mix(in srgb, var(--accent) 62%, #ef4444);
+  --overview-work: color-mix(in srgb, var(--accent) 62%, #0ea5e9);
+  --overview-debt: color-mix(in srgb, var(--accent) 62%, #f59e0b);
+  --overview-receivable: color-mix(in srgb, var(--accent) 62%, #10b981);
 }
 
 :root[data-theme-palette="navy-emerald"] { --accent: #0F172A; --accent-strong: #0B1220; --accent-soft: #D1FAE5; --primary-theme: #0F172A; }
