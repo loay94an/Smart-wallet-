@@ -83,32 +83,18 @@ export class SharingService {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 
-  // Send backup / report to Email via mailto link
-  sendBackupToEmail(state: AppState, recipientEmail?: string): void {
-    const targetEmail = recipientEmail || state.settings.userEmail || 'loay94an@gmail.com';
-    const cur = state.settings.currency || 'ر.س';
+  // Email a concise financial summary only. Full backups must be shared as files.
+  sendBackupToEmail(state: AppState, recipientEmail?: string): boolean {
+    const targetEmail = (recipientEmail || state.settings.userEmail || '').trim();
+    if (!targetEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) {
+      return false;
+    }
     const dateStr = new Date().toISOString().slice(0, 10);
-    const subject = encodeURIComponent(`نسخة احتياطية - المحفظة المالية الذكية (${dateStr})`);
-
-    const summary = this.formatSummaryMessage(state);
-    const jsonString = JSON.stringify(createPortableBackup(state), null, 2);
-
-    const bodyText = `${summary}
-
-=======================================
-📦 بيانات النسخة الاحتياطية المرفقة (JSON):
-يمكنك نسخ البيانات أدناه أو استيرادها في التطبيق:
-=======================================
-${jsonString}`;
-
-    // Browser URL length safe fallback
-    const encodedBody = encodeURIComponent(bodyText.slice(0, 15000));
-    const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${encodedBody}`;
-
-    // Open mail client
-    window.location.href = mailtoUrl;
+    const subject = encodeURIComponent(`تقرير المحفظة المالية الذكية (${dateStr})`);
+    const body = encodeURIComponent(this.formatSummaryMessage(state));
+    window.location.href = `mailto:${encodeURIComponent(targetEmail)}?subject=${subject}&body=${body}`;
+    return true;
   }
-
   // Native Web Share API (WhatsApp, Telegram, Mail on Mobile)
   async shareNative(options: { title: string; text: string; file?: File }): Promise<boolean> {
     if (typeof navigator !== 'undefined' && navigator.share) {
