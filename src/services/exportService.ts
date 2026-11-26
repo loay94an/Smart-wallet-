@@ -232,62 +232,64 @@ export const exportService = {
   },
 
   /**
-   * Export Complete All-in-One Workbook to Excel
+   * Export every top-level data collection plus app settings to one workbook.
+   * Nested objects are serialized as JSON so no fields are silently discarded.
    */
   exportFullWorkbookToExcel: (state: AppState, isRTL: boolean = true) => {
-    const cur = state.settings.currency || 'ر.س';
-    const catMap = new Map(state.categories.map((c) => [c.id, c.name]));
     const workbook = XLSX.utils.book_new();
+    const usedNames = new Set<string>();
+    const label = (key: string) => isRTL ? key : key;
+    const addSheet = (rawName: string, rows: Record<string, unknown>[]) => {
+      let name = rawName.replace(/[\\\\/?*:[\\]]/g, ' ').trim().slice(0, 31) || 'Data';
+      const base = name;
+      let suffix = 2;
+      while (usedNames.has(name)) {
+        const tail = ` ${suffix++}`;
+        name = base.slice(0, 31 - tail.length) + tail;
+      }
+      usedNames.add(name);
+      const normalized = rows.length ? rows.map((row) => Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [
+          key,
+          value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
+        ])
+      )) : [{ [isRTL ? 'ملاحظة' : 'Note']: isRTL ? 'لا توجد بيانات' : 'No data' }];
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(normalized), name);
+    };
 
-    // 1. Transactions
-    const txRows = state.transactions.map((tx, idx) => ({
-      [isRTL ? 'الرقم' : 'ID']: idx + 1,
-      [isRTL ? 'التاريخ' : 'Date']: tx.date,
-      [isRTL ? 'النوع' : 'Type']:
-        tx.type === 'income' ? (isRTL ? 'دخل (+)' : 'Income') : (isRTL ? 'مصروف (-)' : 'Expense'),
-      [isRTL ? 'التصنيف' : 'Category']: catMap.get(tx.category) || tx.category,
-      [isRTL ? `المبلغ (${cur})` : `Amount (${cur})`]: Number(tx.amount),
-      [isRTL ? 'الوصف' : 'Desc']: tx.desc || '',
-    }));
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(txRows.length > 0 ? txRows : [{ [isRTL ? 'ملاحظة' : 'Note']: 'No data' }]),
-      isRTL ? 'المعاملات' : 'Transactions'
-    );
+    const source = state as unknown as Record<string, unknown>;
+    for (const [key, value] of Object.entries(source)) {
+      if (Array.isArray(value)) {
+        addSheet(label(key), value.map((item, index) => ({
+          [isRTL ? 'الرقم' : 'No']: index + 1,
+          ...((item && typeof item === 'object') ? item as Record<string, unknown> : { value: item }),
+        })));
+      } else if (value && typeof value === 'object') {
+        addSheet(label(key), Object.entries(value as Record<string, unknown>).map(([field, fieldValue]) => ({
+          [isRTL ? 'الحقل' : 'Field']: field,
+          [isRTL ? 'القيمة' : 'Value']: fieldValue,
+        })));
+      }
+    }
 
-    // 2. People & Debts
-    const debtRows = state.debts.map((d, idx) => {
-      const p = state.people.find((x) => x.id === d.personId);
-      return {
-        [isRTL ? 'م' : 'No']: idx + 1,
-        [isRTL ? 'الشخص' : 'Person']: p?.name || '',
-        [isRTL ? 'النوع' : 'Type']: d.type === 'debt' ? (isRTL ? 'دين عليك' : 'Debt') : (isRTL ? 'مستحق لك' : 'Receivable'),
-        [isRTL ? `المبلغ (${cur})` : `Amount (${cur})`]: Number(d.amount),
-        [isRTL ? 'الوصف' : 'Desc']: d.desc,
-      };
-    });
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(debtRows.length > 0 ? debtRows : [{ [isRTL ? 'ملاحظة' : 'Note']: 'No data' }]),
-      isRTL ? 'الديون والمستحقات' : 'Debts'
-    );
+    // Work timers are persisted separately from AppState; include them when available.
+    try {
+      const timers = typeof localStorage !== 'undefined'
+        ? localStorage.getItem('smart_work_timers_state')
+        : null;
+      if (timers) {
+        const parsed = JSON.parse(timers);
+        addSheet(isRTL ? 'مؤقتات العمل' : 'Work Timers',
+          Object.entries(parsed as Record<string, unknown>).map(([workId, timer]) => ({
+            [isRTL ? 'معرف العمل' : 'Work ID']: workId,
+            [isRTL ? 'بيانات المؤقت' : 'Timer Data']: timer,
+          })));
+      }
+    } catch (error) {
+      console.warn('Could not include work timers in export:', error);
+    }
 
-    // 3. Work
-    const workRows = state.works.map((w, idx) => ({
-      [isRTL ? 'م' : 'No']: idx + 1,
-      [isRTL ? 'المشروع' : 'Project']: w.name,
-      [isRTL ? 'العميل' : 'Client']: w.client || '',
-      [isRTL ? `السعر (${cur})` : `Rate (${cur})`]: Number(w.rate),
-      [isRTL ? 'الوحدة' : 'Unit']: w.unitName,
-      [isRTL ? 'الحالة' : 'Status']: w.status,
-    }));
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(workRows.length > 0 ? workRows : [{ [isRTL ? 'ملاحظة' : 'Note']: 'No data' }]),
-      isRTL ? 'الأعمال والمشاريع' : 'Work Projects'
-    );
-
-    XLSX.writeFile(workbook, `full-financial-backup-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(workbook, `full-wallet-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
   /**
