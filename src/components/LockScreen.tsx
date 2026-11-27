@@ -104,9 +104,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#0a0a1a] via-[#140b2a] to-[#0a0a1a] p-4 text-white">
-      <div className="w-full max-w-sm rounded-3xl border border-purple-500/30 bg-[#14142b]/95 p-6 text-center shadow-2xl backdrop-blur-xl">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-lg shadow-purple-500/40 animate-pulse-glow">
-          <Lock className="h-10 w-10 text-white" />
+      <div className="w-full max-w-sm rounded-2xl border border-purple-500/30 bg-[#14142b]/95 p-4 text-center shadow-2xl backdrop-blur-xl">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-lg shadow-purple-500/40 animate-pulse-glow">
+          <Lock className="h-7 w-7 text-white" />
         </div>
 
         <h2 className="text-2xl font-black tracking-tight text-white">
@@ -126,7 +126,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
         {/* PIN Mode */}
         {mode === 'pin' && (
           <div className="mt-6">
-            <div className="mb-6 flex justify-center gap-3">
+            <div className="mb-4 flex justify-center gap-2.5">
               {Array.from({ length: requiredLength }).map((_, i) => (
                 <div
                   key={i}
@@ -139,13 +139,13 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
               ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2.5">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <button
                   key={digit}
                   type="button"
                   onClick={() => handlePinDigit(digit)}
-                  className="flex h-14 items-center justify-center rounded-2xl border border-purple-900/50 bg-purple-950/30 text-2xl font-bold text-purple-100 transition-all hover:bg-purple-600 active:scale-95 active:bg-purple-700"
+                  className="flex h-11 items-center justify-center rounded-xl border border-purple-900/50 bg-purple-950/30 text-xl font-bold text-purple-100 transition-all hover:bg-purple-600 active:scale-95 active:bg-purple-700"
                 >
                   {digit}
                 </button>
@@ -163,7 +163,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
                 onClick={handleBackspace}
                 className="flex h-14 items-center justify-center rounded-2xl border border-purple-900/50 bg-purple-950/40 text-purple-300 transition-all hover:bg-red-600/40 active:scale-95"
               >
-                <Delete className="h-6 w-6" />
+                <Delete className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -183,7 +183,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ security, onUnlock, lang
               onMouseDown={handleTouchStart}
               onMouseMove={handleTouchMove}
               onMouseUp={handleTouchEnd}
-              className="mx-auto grid h-64 w-64 select-none grid-cols-3 grid-rows-3 gap-4 rounded-2xl border border-purple-800/40 bg-purple-950/30 p-6 touch-none"
+              className="mx-auto grid h-56 w-56 select-none grid-cols-3 grid-rows-3 gap-3 rounded-2xl border border-purple-800/40 bg-purple-950/30 p-4 touch-none"
             >
               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => {
                 const isActive = patternInput.includes(index);

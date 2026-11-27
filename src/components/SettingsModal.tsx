@@ -23,7 +23,7 @@ const THEME_OPTIONS = [
 ];
 
 const fieldClass = 'w-full rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
-const sectionClass = 'space-y-3 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface)] p-4';
+const sectionClass = 'space-y-3 rounded-xl border border-[var(--border-neutral)] bg-[var(--surface)] p-3';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen, onClose, state, onUpdateSettings, onUpdateSecurity, language,
@@ -126,7 +126,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-3xl border border-[var(--border-neutral)] bg-[var(--canvas)] p-4 sm:p-5 shadow-2xl space-y-4">
+      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-[var(--border-neutral)] bg-[var(--canvas)] p-3 sm:p-4 shadow-2xl space-y-3">
         <header className="flex items-center justify-between border-b border-[var(--border-neutral)] pb-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Settings className="h-5 w-5" /></div>
@@ -145,7 +145,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {THEME_OPTIONS.map((theme) => (
               <button key={theme.id} type="button" aria-pressed={activeTheme === theme.id} onClick={() => setActiveTheme(theme.id)}
-                className={`flex items-center gap-2 rounded-xl border p-2.5 text-start transition-colors ${activeTheme === theme.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)]'}`}>
+                className={`flex items-center gap-2 rounded-lg border p-2 text-start transition-colors ${activeTheme === theme.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)]'}`}>
                 <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full border border-black/10"><span className="h-full w-1/2" style={{ backgroundColor: theme.color }} /><span className="h-full w-1/2" style={{ backgroundColor: theme.secondary }} /></span>
                 <span className="min-w-0 flex-1 text-[11px] font-bold text-[var(--text-primary)]">{isRTL ? theme.nameAr : theme.nameEn}</span>
                 {activeTheme === theme.id && <Check className="h-3.5 w-3.5 text-[var(--accent)]" />}
@@ -155,7 +155,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="border-t border-[var(--border-neutral)] pt-3 space-y-2">
             <label className={cardTitle}>{isRTL ? 'وضع العرض' : 'Display Mode'}</label>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" aria-pressed={appearance === 'light'} onClick={() => setAppearance('light')} className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold ${appearance === 'light' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Sun className="h-4 w-4" />{isRTL ? 'نهاري' : 'Light'}</button>
+              <button type="button" aria-pressed={appearance === 'light'} onClick={() => setAppearance('light')} className={`flex items-center justify-center gap-2 rounded-lg border p-2 text-xs font-bold ${appearance === 'light' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Sun className="h-4 w-4" />{isRTL ? 'نهاري' : 'Light'}</button>
               <button type="button" aria-pressed={appearance === 'dark'} onClick={() => setAppearance('dark')} className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold ${appearance === 'dark' ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'border-[var(--border-neutral)] bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}><Moon className="h-4 w-4" />{isRTL ? 'ليلي' : 'Dark'}</button>
             </div>
           </div>
@@ -184,7 +184,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {securityType === 'pin' && <label className="block space-y-1.5"><span className={muted}>{state.security?.type === 'pin' ? (isRTL ? 'اتركه فارغًا للإبقاء على الرمز الحالي، أو أدخل رمزًا جديدًا' : 'Leave blank to keep the current PIN, or enter a new one') : (isRTL ? 'رمز PIN جديد (4–6 أرقام)' : 'New PIN (4–6 digits)')}</span><input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="••••" className={`${fieldClass} text-center tracking-[0.5em]`} /></label>}
           {securityType === 'pattern' && <div className="space-y-3">
             <div className="flex items-center justify-between gap-2"><p className={muted}>{patternStep === 'create' ? (isRTL ? 'ارسم النمط: اختر 4 نقاط على الأقل بالترتيب' : 'Create: select at least 4 dots in order') : (isRTL ? 'أعد اختيار النقاط بالترتيب نفسه للتأكيد' : 'Confirm by selecting the same dots in order')}</p><button type="button" onClick={resetPattern} className="text-[11px] font-bold text-[var(--accent)]">{isRTL ? 'مسح' : 'Clear'}</button></div>
-            <div className="mx-auto grid max-w-[230px] grid-cols-3 gap-3 rounded-2xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-4">
+            <div className="mx-auto grid max-w-[210px] grid-cols-3 gap-2.5 rounded-xl border border-[var(--border-neutral)] bg-[var(--surface-muted)] p-3">
               {Array.from({ length: 9 }, (_, index) => {
                 const active = (patternStep === 'create' ? pattern : confirmPattern).includes(index);
                 const order = (patternStep === 'create' ? pattern : confirmPattern).indexOf(index);
@@ -198,8 +198,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </section>
 
         <footer className="flex gap-2 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border-neutral)] bg-[var(--surface)] py-3 text-xs font-bold text-[var(--text-secondary)]">{isRTL ? 'إلغاء' : 'Cancel'}</button>
-          <button type="button" onClick={handleSave} className="flex-1 rounded-xl bg-[var(--accent)] py-3 text-xs font-black text-white shadow-md active:scale-[0.99]">{isRTL ? 'حفظ الإعدادات' : 'Save Settings'}</button>
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-[var(--border-neutral)] bg-[var(--surface)] py-2.5 text-xs font-bold text-[var(--text-secondary)]">{isRTL ? 'إلغاء' : 'Cancel'}</button>
+          <button type="button" onClick={handleSave} className="flex-1 rounded-lg bg-[var(--accent)] py-2.5 text-xs font-black text-white shadow-md active:scale-[0.99]">{isRTL ? 'حفظ الإعدادات' : 'Save Settings'}</button>
         </footer>
       </div>
     </div>
